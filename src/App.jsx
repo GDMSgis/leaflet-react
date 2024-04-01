@@ -8,6 +8,7 @@ import { TbChartCircles } from "react-icons/tb";
 import { TfiLayoutLineSolid } from "react-icons/tfi";
 
 function App() {
+    const [cursorPosition, setCursorPosition] = useState({ lat: 0, lng: 0 });
     const [currentInteractionMode, setCurrentInteractionMode] = useState('dragging');
     const [visibility, setVisibility] = useState({
         RFF: true,
@@ -29,8 +30,8 @@ function App() {
     };
 
     return (
-        <div className="flex flex-row" style={{ backgroundColor: '#f5f5f5' }}>
-            <div className="flex flex-col w-96 h-full gap-2 py-4 px-4" style={{ backgroundColor: '#f5f5f5' }}> {/* soft grey background */}                <Button variant="contained" color={currentInteractionMode === 'dragging' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('dragging')}>
+        <div className="flex flex-row" style={{ backgroundColor: 'lightgrey' }}>
+            <div className="flex flex-col w-96 h-full gap-2 py-4 px-4" style={{ backgroundColor: 'lightgrey' }}> {/* soft grey background */}                <Button variant="contained" color={currentInteractionMode === 'dragging' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('dragging')}>
                     <RiDraggable /> Dragging
                 </Button>
                 <Button variant="contained" color={currentInteractionMode === 'RFF' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('RFF')}>
@@ -66,13 +67,45 @@ function App() {
                     {!visibility.circles ? <RiFilterOffLine /> : <RiFilterFill />} Circles Visibility
                 </Button>
             </div>
-            <MarkerProvider>
-                <MyMap
-                    currentInteractionMode={currentInteractionMode}
-                    visibility={visibility}
-                />
-            </MarkerProvider>
-        </div>
+                <MarkerProvider>
+                    <MyMap
+                        currentInteractionMode={currentInteractionMode}
+                        visibility={visibility}
+                        setCursorPosition={setCursorPosition} // Pass this prop down to MyMap
+                    />
+                </MarkerProvider>
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '20px', // Moved to top
+                    left: '50%',
+                    transform: 'translateX(-50%)', // Center horizontally
+                    backgroundColor: 'rgba(0, 0, 0, 0.75)', // Dark background
+                    color: 'white', // Blue text
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    zIndex: 1000, // Above map elements
+                    fontSize: '1.3rem', // Larger text
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', // Optional shadow for better visibility
+                }}
+            >
+                {/* Coordinate Table */}
+                <table style={{ width: '100%' }}>
+                    <tbody>
+                    <tr>
+                        <td style={{ textAlign: 'left',paddingRight:'1em' }}>Lat:</td>
+                        <td style={{ textAlign: 'right' }}>{cursorPosition.lat.toFixed(5)}</td>
+                    </tr>
+                    <tr>
+                        <td style={{ textAlign: 'left', paddingRight:'1em'}}>Lon:</td>
+                        <td style={{ textAlign: 'right' }}>{cursorPosition.lng.toFixed(5)}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            </div>
     );
 }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, createContext, useContext, useState } from 'react';
+import React, { useEffect, createContext, useContext, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker as LeafletMarker, Popup, Polyline, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -126,15 +126,46 @@ const MapInteractions = ({ currentInteractionMode }) => {
 };
 
 
-const MyMap = ({ currentInteractionMode, visibility }) => {
+const MyMap = ({ currentInteractionMode, visibility, setCursorPosition }) => {
+	const mapRef = useRef(); // Create a ref for the map
 	const { markers, addMarker, lines, addLine, circles, addCircle } = useContext(MarkerContext);
 	const [lineStart, setLineStart] = useState(null);
 
-	const position = [33.418480, -111.932528]; // Initial map position
+	const position = [37.17952, -122.36]; // Initial map position
+	const MapEvents = () => {
+		useMapEvents({
+			mousemove: (e) => {
+				setCursorPosition(e.latlng);
+			},
+			// ...any other map events
+		});
+		return null;
+	};
+
+	useEffect(() => {
+		// This effect will run when the mapRef is set (after the MapContainer has mounted)
+		if (mapRef.current) {
+			const mapInstance = mapRef.current;
+
+			const handleMouseMove = (event) => {
+				setCursorPosition(event.latlng);
+			};
+
+			// Listen for mouse move events
+			mapInstance.on('mousemove', handleMouseMove);
+
+			// Cleanup function to run when the component unmounts
+			return () => {
+				mapInstance.off('mousemove', handleMouseMove);
+			};
+		}
+	}, [setCursorPosition]);
+
 
 	return (
-		<MapContainer center={position} zoom={16} style={{ height: "100vh", width: "100vw" }}>
+		<MapContainer center={position} zoom={8} ref={mapRef} style={{ height: "100vh", width: "100vw" }}>
 			<TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+			<MapEvents />
 			<MapInteractions
 				currentInteractionMode={currentInteractionMode}
 				addMarker={addMarker}
