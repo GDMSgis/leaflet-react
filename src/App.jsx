@@ -1,89 +1,77 @@
-// App.js
 import React, { useState } from 'react';
-import MyMap from './MyMap';
+import {MyMap, MarkerProvider} from './MyMap';
+import Button from '@mui/material/Button';
+import { BsBroadcast } from "react-icons/bs";
+import { RiShip2Line, RiDraggable, RiFilterFill, RiFilterOffLine } from "react-icons/ri";
+import { FaBroadcastTower } from "react-icons/fa";
+import { TbChartCircles } from "react-icons/tb";
+import { TfiLayoutLineSolid } from "react-icons/tfi";
 
 function App() {
-    const [mode, setMode] = useState('dragging'); // default mode to 'dragging'
+    const [currentInteractionMode, setCurrentInteractionMode] = useState('dragging');
     const [visibility, setVisibility] = useState({
-        markers: true,
+        RFF: true,
+        Signal: true,
+        Boat: true,
         lines: true,
         circles: true,
     });
 
-    const buttonStyle = "rounded-md bg-gray-200 border border-black hover:bg-blue-200 m-2";
-
-    const handleModeChange = (newMode) => {
-        setMode(newMode);
-        if (newMode !== 'all') {
-            setVisibility({ ...visibility, [newMode]: true });
-        } else {
-            setVisibility({ markers: true, lines: true, circles: true });
-        }
+    const handleInteractionModeChange = (mode) => {
+        setCurrentInteractionMode(mode);
     };
 
     const toggleVisibility = (type) => {
-        setVisibility({ ...visibility, [type]: !visibility[type] });
+        setVisibility(prevVisibility => ({
+            ...prevVisibility,
+            [type]: !prevVisibility[type]
+        }));
     };
 
     return (
-        <div className="flex flex-row">
-            <div className="flex flex-col w-96 h-full gap-2 py-4 px-4">
-                <button
-                    className={`${buttonStyle} ${mode === 'dragging' ? "bg-yellow-200" : ""}`}
-                    onClick={() => handleModeChange('dragging')}
-                >
-                    Dragging
-                </button>
-                <button
-                    className={`${buttonStyle} ${mode === 'markers' ? "bg-yellow-200" : ""}`}
-                    onClick={() => handleModeChange('markers')}
-                >
-                    Markers
-                </button>
-                <button
-                    className={`${buttonStyle} ${mode === 'lines' ? "bg-yellow-200" : ""}`}
-                    onClick={() => handleModeChange('lines')}
-                >
-                    Lines
-                </button>
-                <button
-                    className={`${buttonStyle} ${mode === 'circles' ? "bg-yellow-200" : ""}`}
-                    onClick={() => handleModeChange('circles')}
-                >
-                    Circles
-                </button>
+        <div className="flex flex-row" style={{ backgroundColor: '#f5f5f5' }}>
+            <div className="flex flex-col w-96 h-full gap-2 py-4 px-4" style={{ backgroundColor: '#f5f5f5' }}> {/* soft grey background */}                <Button variant="contained" color={currentInteractionMode === 'dragging' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('dragging')}>
+                    <RiDraggable /> Dragging
+                </Button>
+                <Button variant="contained" color={currentInteractionMode === 'RFF' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('RFF')}>
+                    <FaBroadcastTower /> Add RFF Marker
+                </Button>
+                <Button variant="contained" color={currentInteractionMode === 'Signal' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('Signal')}>
+                    <BsBroadcast /> Add Signal Marker
+                </Button>
+                <Button variant="contained" color={currentInteractionMode === 'Boat' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('Boat')}>
+                    <RiShip2Line /> Add Boat Marker
+                </Button>
+                <Button variant="contained" color={currentInteractionMode === 'lines' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('lines')}>
+                    <TfiLayoutLineSolid /> Lines
+                </Button>
+                <Button variant="contained" color={currentInteractionMode === 'circles' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('circles')}>
+                    <TbChartCircles /> Circles
+                </Button>
 
-                <button
-                    className={`${buttonStyle} ${!visibility.markers ? "bg-red-200" : ""}`}
-                    onClick={() => toggleVisibility('markers')}
-                >
-                    Toggle Markers Visibility
-                </button>
-                <button
-                    className={`${buttonStyle} ${!visibility.lines ? "bg-red-200" : ""}`}
-                    onClick={() => toggleVisibility('lines')}
-                >
-                    Toggle Lines Visibility
-                </button>
-                <button
-                    className={`${buttonStyle} ${!visibility.circles ? "bg-red-200" : ""}`}
-                    onClick={() => toggleVisibility('circles')}
-                >
-                    Toggle Circles Visibility
-                </button>
-                <button
-                    className={`${buttonStyle} ${mode === 'all' ? "bg-yellow-200" : ""}`}
-                    onClick={() => handleModeChange('all')}
-                >
-                    Show All
-                </button>
+                {/* Visibility Toggle Buttons */}
+                <Button variant="outlined" color={!visibility.RFF ? "error" : "success"} onClick={() => toggleVisibility('RFF')}>
+                    {!visibility.RFF ? <RiFilterOffLine /> : <RiFilterFill />} RFF Visibility
+                </Button>
+                <Button variant="outlined" color={!visibility.Signal ? "error" : "success"} onClick={() => toggleVisibility('Signal')}>
+                    {!visibility.Signal ? <RiFilterOffLine /> : <RiFilterFill />} Signal Visibility
+                </Button>
+                <Button variant="outlined" color={!visibility.Boat ? "error" : "success"} onClick={() => toggleVisibility('Boat')}>
+                    {!visibility.Boat ? <RiFilterOffLine /> : <RiFilterFill />} Boat Visibility
+                </Button>
+                <Button variant="outlined" color={!visibility.lines ? "error" : "success"} onClick={() => toggleVisibility('lines')}>
+                    {!visibility.lines ? <RiFilterOffLine /> : <RiFilterFill />} Lines Visibility
+                </Button>
+                <Button variant="outlined" color={!visibility.circles ? "error" : "success"} onClick={() => toggleVisibility('circles')}>
+                    {!visibility.circles ? <RiFilterOffLine /> : <RiFilterFill />} Circles Visibility
+                </Button>
             </div>
-            <MyMap
-                mode={mode}
-                showMarkers={visibility.markers}
-                showLines={visibility.lines}
-                showCircles={visibility.circles}
-            />
+            <MarkerProvider>
+                <MyMap
+                    currentInteractionMode={currentInteractionMode}
+                    visibility={visibility}
+                />
+            </MarkerProvider>
         </div>
     );
 }
