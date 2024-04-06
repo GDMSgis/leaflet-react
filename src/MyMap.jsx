@@ -1,5 +1,5 @@
 import React, { useEffect, createContext, useContext, useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker as LeafletMarker, Popup, Polyline, Circle, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker as LeafletMarker, Popup, Polyline, Circle, useMap, useMapEvents, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { FaBroadcastTower} from "react-icons/fa";
@@ -51,7 +51,8 @@ const MarkerProvider = ({ children }) => {
 };
 
 
-const CustomMarker = ({ marker }) => {
+const CustomMarker = ({ marker, addBookmark }) => {
+	
 	let icon;
 	switch (marker.type) {
 		case 'RFF':
@@ -69,7 +70,25 @@ const CustomMarker = ({ marker }) => {
 
 	return (
 		<LeafletMarker position={marker.latlng} icon={icon}>
-			<Popup>{marker.description}<br />Ping Time: {marker.pingTime}</Popup>
+			<Popup>{marker.description}<br />Ping Time: {marker.pingTime}
+			<button 
+				style={{
+					backgroundColor: '#4CAF50',
+					border: 'none',
+					color: 'white',
+					padding: '10px 16px',
+					textAlign: 'center',
+					textDecoration: 'none',
+					display: 'inline-block',
+					fontSize: '16px',
+					margin: '4px 2px',
+					cursor: 'pointer'
+				}}
+				onClick={() => addBookmark(marker)}
+			>
+				Add to bookmarks
+			</button>
+			</Popup>
 		</LeafletMarker>
 	);
 };
@@ -126,8 +145,9 @@ const MapInteractions = ({ currentInteractionMode }) => {
 };
 
 
-const MyMap = ({ currentInteractionMode, visibility, setCursorPosition }) => {
+const MyMap = ({ currentInteractionMode, visibility, setCursorPosition, addBookmark, setBookmarks, bookmarkPosition }) => {
 	const mapRef = useRef(); // Create a ref for the map
+	
 	const { markers, addMarker, lines, addLine, circles, addCircle } = useContext(MarkerContext);
 	const [lineStart, setLineStart] = useState(null);
 
@@ -139,6 +159,14 @@ const MyMap = ({ currentInteractionMode, visibility, setCursorPosition }) => {
 			},
 			// ...any other map events
 		});
+
+		useEffect(() => {
+			if (bookmarkPosition && mapRef.current) {
+				const mapInstance = mapRef.current;
+				mapInstance.flyTo(bookmarkPosition);
+			}
+		}, [bookmarkPosition]);
+		
 		return null;
 	};
 
@@ -175,8 +203,8 @@ const MyMap = ({ currentInteractionMode, visibility, setCursorPosition }) => {
 				setLineStart={setLineStart}
 			/>
 			{markers.filter(marker => visibility[marker.type]).map((marker, index) => (
-				<CustomMarker key={index} marker={marker} />
-			))}
+            	<CustomMarker key={index} marker={marker} addBookmark={addBookmark} setBookmarks={setBookmarks} />
+        	))}
 
 			{visibility.lines && lines.map((line, index) => (
 				<Polyline key={`line-${index}`} positions={[line.start, line.end]} color="red" />

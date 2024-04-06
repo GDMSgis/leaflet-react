@@ -8,6 +8,13 @@ import { TbChartCircles } from "react-icons/tb";
 import { TfiLayoutLineSolid } from "react-icons/tfi";
 
 function App() {
+
+    // Declare array to store bookmarks
+    const [bookmarks, setBookmarks] = useState([]);
+
+    // Declare state to store bookmark position
+    const [bookmarkPosition, setBookmarkPosition] = useState(null);
+
     const [cursorPosition, setCursorPosition] = useState({ lat: 0, lng: 0 });
     const [currentInteractionMode, setCurrentInteractionMode] = useState('dragging');
     const [visibility, setVisibility] = useState({
@@ -17,6 +24,49 @@ function App() {
         lines: true,
         circles: true,
     });
+
+
+    const BookmarkList = ({ bookmarks }) => {
+        return (
+            <div>
+                <h1 style={{ fontWeight: 'bold', fontSize: '2em', padding: '2px' }}>Bookmarks</h1>
+                {bookmarks.map((bookmark, index) => (
+                    <Button
+                    key={index}
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setBookmarkPosition(bookmark.latlng)}
+                    style={{ margin: '10px 0', padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                    <div>
+                        <h3 style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>{bookmark.type}</h3>
+                        <p style={{ margin: '0' }}>{bookmark.description}</p>
+                    </div>
+                    <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0' }}>
+                        <span>Lat:</span>
+                        <span style={{ fontFamily: 'monospace' }}>{bookmark.latlng.lat.toFixed(2)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0' }}>
+                        <span>Lng:</span>
+                        <span style={{ fontFamily: 'monospace' }}>{bookmark.latlng.lng.toFixed(2)}</span>
+                    </div>
+                    </div>
+                </Button>
+                ))}
+            </div>
+        );
+    };
+
+    // Function to add a bookmark to the TOC
+    const addBookmark = (marker) => {
+        console.log('Adding bookmark:', marker);
+        setBookmarks((prevBookmarks) => {
+            const newBookmarks = [...prevBookmarks, marker];
+            console.log('Updated bookmarks:', newBookmarks);
+            return newBookmarks;
+        });
+    };
 
     const handleInteractionModeChange = (mode) => {
         setCurrentInteractionMode(mode);
@@ -66,12 +116,16 @@ function App() {
                 <Button variant="outlined" color={!visibility.circles ? "error" : "success"} onClick={() => toggleVisibility('circles')}>
                     {!visibility.circles ? <RiFilterOffLine /> : <RiFilterFill />} Circles Visibility
                 </Button>
+                <BookmarkList bookmarks={bookmarks} />
             </div>
                 <MarkerProvider>
                     <MyMap
                         currentInteractionMode={currentInteractionMode}
                         visibility={visibility}
                         setCursorPosition={setCursorPosition} // Pass this prop down to MyMap
+                        addBookmark={addBookmark} // Pass down to MyMap
+                        setBookmarks={setBookmarks} // Pass down to MyMap
+                        bookmarkPosition={bookmarkPosition}
                     />
                 </MarkerProvider>
             <div
