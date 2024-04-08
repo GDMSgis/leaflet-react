@@ -119,6 +119,7 @@ function App() {
                         addBookmark={addBookmark}  // Pass props to myMap
                         setBookmarks={setBookmarks} 
                         bookmarkPosition={bookmarkPosition}
+                        setBookmarkPosition = {setBookmarkPosition}
                     />
                 </MarkerProvider>
             <div

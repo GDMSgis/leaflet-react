@@ -131,7 +131,7 @@ const MapInteractions = ({ currentInteractionMode }) => {
 };
 
 
-const MyMap = ({ currentInteractionMode, visibility, setCursorPosition, addBookmark, setBookmarks, bookmarkPosition }) => {
+const MyMap = ({ currentInteractionMode, visibility, setCursorPosition, addBookmark, setBookmarks, bookmarkPosition, setBookmarkPosition }) => {
 	const mapRef = useRef(); // Create a ref for the map
 	
 	const { markers, addMarker, lines, addLine, circles, addCircle } = useContext(MarkerContext);
@@ -149,9 +149,8 @@ const MyMap = ({ currentInteractionMode, visibility, setCursorPosition, addBookm
 		useEffect(() => {
 			if (bookmarkPosition && mapRef.current) {
 				const mapInstance = mapRef.current;
-				mapInstance.flyTo(bookmarkPosition, 9 , {duration: 2} );
-
-				mapInstance.stop();
+				mapInstance.flyTo(bookmarkPosition, 9);
+				setBookmarkPosition(null);
 				
 			}
 		}, [bookmarkPosition]);
