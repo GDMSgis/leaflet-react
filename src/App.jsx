@@ -6,6 +6,7 @@ import { RiShip2Line, RiDraggable, RiFilterFill, RiFilterOffLine } from "react-i
 import { FaBroadcastTower } from "react-icons/fa";
 import { TbChartCircles } from "react-icons/tb";
 import { TfiLayoutLineSolid } from "react-icons/tfi";
+import { TopBar } from "./TopBar";
 
 function App() {
     const [cursorPosition, setCursorPosition] = useState({ lat: 0, lng: 0 });
@@ -30,8 +31,13 @@ function App() {
     };
 
     return (
+        <>
+        <TopBar></TopBar>
+
         <div className="flex flex-row" style={{ backgroundColor: 'lightgrey' }}>
-            <div className="flex flex-col w-96 h-full gap-2 py-4 px-4" style={{ backgroundColor: 'lightgrey' }}> {/* soft grey background */}                <Button variant="contained" color={currentInteractionMode === 'dragging' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('dragging')}>
+            <div className="flex flex-col w-96 h-full gap-2 py-4 px-4" style={{ backgroundColor: 'lightgrey' }}> {/* soft grey background */}  
+
+                <Button variant="contained" color={currentInteractionMode === 'dragging' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('dragging')}>
                     <RiDraggable /> Dragging
                 </Button>
                 <Button variant="contained" color={currentInteractionMode === 'RFF' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('RFF')}>
@@ -77,7 +83,7 @@ function App() {
             <div
                 style={{
                     position: 'absolute',
-                    top: '20px', // Moved to top
+                    top: '50px', // Moved to top
                     left: '50%',
                     transform: 'translateX(-50%)', // Center horizontally
                     backgroundColor: 'rgba(0, 0, 0, 0.75)', // Dark background
@@ -105,7 +111,8 @@ function App() {
                     </tbody>
                 </table>
             </div>
-            </div>
+        </div>
+        </>
     );
 }
 

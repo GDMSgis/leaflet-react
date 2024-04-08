@@ -1,4 +1,4 @@
-import React, { useEffect, createContext, useContext, useState, useRef } from 'react';
+import React, { useEffect, createContext, useContext, useState, useRef, Button } from 'react';
 import { MapContainer, TileLayer, Marker as LeafletMarker, Popup, Polyline, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -32,7 +32,7 @@ const MarkerProvider = ({ children }) => {
 
 	const addMarker = (latlng, type, description, audioFile = null) => {
 		const pingTime = new Date().toISOString();
-		setMarkers([...markers, { latlng, type, description, audioFile, pingTime }]);
+		setMarkers([...markers, { latlng, type, description, audioFile, pingTime}]);
 	};
 
 	const addLine = (start, end) => {
@@ -52,6 +52,8 @@ const MarkerProvider = ({ children }) => {
 
 
 const CustomMarker = ({ marker }) => {
+	const { markers, addMarker, lines, addLine, circles, addCircle } = useContext(MarkerContext);
+
 	let icon;
 	switch (marker.type) {
 		case 'RFF':
@@ -67,9 +69,41 @@ const CustomMarker = ({ marker }) => {
 			icon = L.icon({ iconUrl: 'default-icon.png' }); // Default case
 	}
 
+	// Create Form States
+	const [MDescription, setMDescription] = useState(marker.description);
+
+	const handleChange = (e) => {
+		setMDescription(e.target.value);
+	};
+
+	const saveChanges = () => {
+		let curmarker = markers.indexOf(marker);
+		markers[curmarker].description = MDescription;
+	};
+
 	return (
 		<LeafletMarker position={marker.latlng} icon={icon}>
-			<Popup>{marker.description}<br />Ping Time: {marker.pingTime}</Popup>
+			{/* <Popup >{marker.description}<br />Ping Time: {marker.pingTime}</Popup> */}
+			<Popup eventHandlers={{
+				remove: (e) => {
+				setMDescription(marker.description);
+				},
+			}}>
+				<div className="flex flex-col">
+					<label>
+						Description:&ensp;
+						<input className="shadow appearance-none border rounded py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" value={MDescription} onChange={handleChange}/>
+					</label> <br/>
+					<label >
+						Lat: {marker.latlng.lat.toFixed(5)} &emsp; Long: {marker.latlng.lng.toFixed(5)}
+					</label> <br/>
+					<label>
+						Ping Time: {marker.pingTime}
+					</label> <br/>
+					<button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded justify-self-end" onClick={saveChanges}>Save</button>
+				</div>
+			</Popup>
+			
 		</LeafletMarker>
 	);
 };
@@ -163,7 +197,7 @@ const MyMap = ({ currentInteractionMode, visibility, setCursorPosition }) => {
 
 
 	return (
-		<MapContainer center={position} zoom={8} ref={mapRef} style={{ height: "100vh", width: "100vw" }}>
+		<MapContainer center={position} zoom={8} ref={mapRef} style={{ height: "100vh", width: "100vw"}}>
 			<TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 			<MapEvents />
 			<MapInteractions
