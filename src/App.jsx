@@ -31,28 +31,22 @@ function App() {
             <div>
                 <h1 style={{ fontWeight: 'bold', fontSize: '2em', padding: '2px' }}>Bookmarks</h1>
                 {bookmarks.map((bookmark, index) => (
-                    <Button
-                    key={index}
-                    variant="contained"
-                    color="primary"
-                    onClick={() => setBookmarkPosition(bookmark.latlng)}
-                    style={{ margin: '10px 0', padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                    <div>
-                        <h3 style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>{bookmark.type}</h3>
-                        <p style={{ margin: '0' }}>{bookmark.description}</p>
-                    </div>
-                    <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0' }}>
-                        <span>Lat:</span>
-                        <span style={{ fontFamily: 'monospace' }}>{bookmark.latlng.lat.toFixed(2)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0' }}>
-                        <span>Lng:</span>
-                        <span style={{ fontFamily: 'monospace' }}>{bookmark.latlng.lng.toFixed(2)}</span>
-                    </div>
-                    </div>
-                </Button>
+                    <Button className="bookmark-list" key={index} variant="contained" color="primary" onClick={() => setBookmarkPosition(bookmark.latlng)} style={{ marginBottom: '4px' }} >
+                        <div>
+                            <h3 style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>{bookmark.type}</h3>
+                            <p style={{ margin: '0' }}>{bookmark.description}</p>
+                        </div>
+                        <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0' }}>
+                            <span>Lat:</span>
+                            <span style={{ fontFamily: 'monospace' }}>{bookmark.latlng.lat.toFixed(2)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0' }}>
+                            <span>Lng:</span>
+                            <span style={{ fontFamily: 'monospace' }}>{bookmark.latlng.lng.toFixed(2)}</span>
+                        </div>
+                        </div>
+                    </Button>
                 ))}
             </div>
         );
@@ -63,7 +57,6 @@ function App() {
         console.log('Adding bookmark:', marker);
         setBookmarks((prevBookmarks) => {
             const newBookmarks = [...prevBookmarks, marker];
-            console.log('Updated bookmarks:', newBookmarks);
             return newBookmarks;
         });
     };
@@ -123,8 +116,8 @@ function App() {
                         currentInteractionMode={currentInteractionMode}
                         visibility={visibility}
                         setCursorPosition={setCursorPosition} // Pass this prop down to MyMap
-                        addBookmark={addBookmark} // Pass down to MyMap
-                        setBookmarks={setBookmarks} // Pass down to MyMap
+                        addBookmark={addBookmark}  // Pass props to myMap
+                        setBookmarks={setBookmarks} 
                         bookmarkPosition={bookmarkPosition}
                     />
                 </MarkerProvider>

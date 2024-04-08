@@ -71,21 +71,7 @@ const CustomMarker = ({ marker, addBookmark }) => {
 	return (
 		<LeafletMarker position={marker.latlng} icon={icon}>
 			<Popup>{marker.description}<br />Ping Time: {marker.pingTime}
-			<button 
-				style={{
-					backgroundColor: '#4CAF50',
-					border: 'none',
-					color: 'white',
-					padding: '10px 16px',
-					textAlign: 'center',
-					textDecoration: 'none',
-					display: 'inline-block',
-					fontSize: '16px',
-					margin: '4px 2px',
-					cursor: 'pointer'
-				}}
-				onClick={() => addBookmark(marker)}
-			>
+			<button className="add-bookmark-button" onClick={() => addBookmark(marker)}>
 				Add to bookmarks
 			</button>
 			</Popup>
@@ -163,7 +149,10 @@ const MyMap = ({ currentInteractionMode, visibility, setCursorPosition, addBookm
 		useEffect(() => {
 			if (bookmarkPosition && mapRef.current) {
 				const mapInstance = mapRef.current;
-				mapInstance.flyTo(bookmarkPosition);
+				mapInstance.flyTo(bookmarkPosition, 9 , {duration: 2} );
+
+				mapInstance.stop();
+				
 			}
 		}, [bookmarkPosition]);
 		
