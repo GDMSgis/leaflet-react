@@ -25,7 +25,6 @@ function App() {
     areas: true,
   });
 
-
   // Bookmark List component
   const BookmarkList = ({ bookmarks }) => {
     return (
@@ -90,50 +89,89 @@ function App() {
     }));
   };
 
+  const ModeButton = ({mode, children}) => {
+    return (
+      <Button
+        variant="contained"
+        color={currentInteractionMode === mode ? "primary" : "secondary"}
+        onClick={() => handleInteractionModeChange(mode)}
+      >
+        {children}
+      </Button>
+    )
+  };
+
+  const VisibilityButton = ({layer, children}) => {
+    return (
+      <Button
+        variant="outlined"
+        color={!visibility[layer] ? "error" : "success"}
+        onClick={() => toggleVisibility(layer)}
+      >
+        {!visibility[layer] ? <RiFilterOffLine /> : <RiFilterFill />}
+        {children}
+      </Button>
+    )
+  };
+
   return (
     <div className="flex flex-row bg-gray-300">
-      <div className="flex flex-col w-96 h-full gap-2 py-4 px-4 bg-gray-300"> {/* soft grey background */}
-        <Button variant="contained" color={currentInteractionMode === 'dragging' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('dragging')}>
+      <div className="flex flex-col w-96 h-full gap-2 py-4 px-4e bg-gray-300">
+
+        {/* Mode Buttons*/}
+        <ModeButton mode="dragging">
           <RiDraggable /> Dragging
-        </Button>
-        <Button variant="contained" color={currentInteractionMode === 'RFF' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('RFF')}>
+        </ModeButton>
+
+        <ModeButton mode="RFF">
           <FaBroadcastTower /> Add RFF Marker
-        </Button>
-        <Button variant="contained" color={currentInteractionMode === 'Signal' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('Signal')}>
+        </ModeButton>
+
+        <ModeButton mode="Signal">
           <BsBroadcast /> Add Signal Marker
-        </Button>
-        <Button variant="contained" color={currentInteractionMode === 'Boat' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('Boat')}>
+        </ModeButton>
+
+        <ModeButton mode="Boat">
           <RiShip2Line /> Add Boat Marker
-        </Button>
-        <Button variant="contained" color={currentInteractionMode === 'lines' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('lines')}>
+        </ModeButton>
+
+        <ModeButton mode="lines">
           <TfiLayoutLineSolid /> Lines
-        </Button>
-        <Button variant="contained" color={currentInteractionMode === 'area' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('area')}>
+        </ModeButton>
+
+        <ModeButton mode="area">
           <TfiLayoutLineSolid /> Area
-        </Button>
-        <Button variant="contained" color={currentInteractionMode === 'circles' ? "primary" : "secondary"} onClick={() => handleInteractionModeChange('circles')}>
+        </ModeButton>
+
+        <ModeButton mode="circles">
           <TbChartCircles /> Circles
-        </Button>
+        </ModeButton>
 
         {/* Visibility Toggle Buttons */}
-        <Button variant="outlined" color={!visibility.RFF ? "error" : "success"} onClick={() => toggleVisibility('RFF')}>
-          {!visibility.RFF ? <RiFilterOffLine /> : <RiFilterFill />} RFF Visibility
-        </Button>
-        <Button variant="outlined" color={!visibility.Signal ? "error" : "success"} onClick={() => toggleVisibility('Signal')}>
-          {!visibility.Signal ? <RiFilterOffLine /> : <RiFilterFill />} Signal Visibility
-        </Button>
-        <Button variant="outlined" color={!visibility.Boat ? "error" : "success"} onClick={() => toggleVisibility('Boat')}>
-          {!visibility.Boat ? <RiFilterOffLine /> : <RiFilterFill />} Boat Visibility
-        </Button>
-        <Button variant="outlined" color={!visibility.lines ? "error" : "success"} onClick={() => toggleVisibility('lines')}>
-          {!visibility.lines ? <RiFilterOffLine /> : <RiFilterFill />} Lines Visibility
-        </Button>
-        <Button variant="outlined" color={!visibility.areas ? "error" : "success"} onClick={() => toggleVisibility('areas')}>
-          {!visibility.areas ? <RiFilterOffLine /> : <RiFilterFill />} Areas Visibility
-        </Button>
-        <Button variant="outlined" color={!visibility.circles ? "error" : "success"} onClick={() => toggleVisibility('circles')}>
-          {!visibility.circles ? <RiFilterOffLine /> : <RiFilterFill />} Circles Visibility
-        </Button>
+        <VisibilityButton layer="RFF">
+          RFF Visibility
+        </VisibilityButton>
+
+        <VisibilityButton layer="Signal">
+          Signal Visibility
+        </VisibilityButton>
+
+        <VisibilityButton layer="Boat">
+          Boat Visibility
+        </VisibilityButton>
+
+        <VisibilityButton layer="lines">
+          Lines Visibility
+        </VisibilityButton>
+
+        <VisibilityButton layer="areas">
+          Areas Visibility
+        </VisibilityButton>
+
+        <VisibilityButton layer="circles">
+          Circles Visibility
+        </VisibilityButton>
+
         {/* Bookmark List */}
         <BookmarkList bookmarks={bookmarks} />
       </div>
