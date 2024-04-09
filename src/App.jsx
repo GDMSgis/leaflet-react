@@ -29,10 +29,11 @@ function App() {
   const BookmarkList = ({ bookmarks }) => {
     return (
       <div>
-        <div className="flex items-center gap-5 font-bold text-2xl p-1 mb-0 ml-5 underline ">
+        <div className="flex items-center gap-5 font-bold text-2xl p-1 mb-0 ml-5 underline">
           <div>Bookmarks</div>
           <FaBookBookmark size={34}/>
         </div>
+        <div class="overflow-scroll h-80">
         {bookmarks.map((bookmark, index) => (
           <div className="mb-2 relative">
             <Button className="w-full top-3 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white p-2 rounded-2xl z-10 text-4xl font-bold text-center shadow-md flex flex-col items-start" key={index} variant="contained" color="primary" onClick={() => setBookmarkPosition(bookmark.latlng)}>
@@ -51,6 +52,7 @@ function App() {
             </Button>
           </div>
         ))}
+        </div>
       </div>
     );
   };
@@ -116,7 +118,7 @@ function App() {
 
   return (
     <div className="flex flex-row bg-gray-300">
-      <div className="flex flex-col w-96 h-full gap-2 py-4 px-4 bg-gray-300">
+      <div className="flex flex-col w-96 h-full max-h-screen gap-2 py-4 px-4 bg-gray-300">
 
         {/* Mode Buttons*/}
         <ModeButton mode="dragging">
