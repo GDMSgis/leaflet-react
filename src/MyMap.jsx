@@ -7,6 +7,7 @@ import { RiShip2Line } from "react-icons/ri";
 import 'leaflet/dist/leaflet.css';
 import {BsBroadcast} from "react-icons/bs";
 
+
 // Custom icon creation function
 const createCustomIcon = (icon) => {
 	const customMarkerHtml = renderToStaticMarkup(icon);
@@ -146,10 +147,13 @@ const MyMap = ({ currentInteractionMode, visibility, setCursorPosition, addBookm
 			// ...any other map events
 		});
 
+		// If bookmark position is set, fly to that position
 		useEffect(() => {
 			if (bookmarkPosition && mapRef.current) {
 				const mapInstance = mapRef.current;
 				mapInstance.flyTo(bookmarkPosition, 9);
+
+				// Update the bookmark position state after flying to the location (thank you andy)
 				setBookmarkPosition(null);
 				
 			}

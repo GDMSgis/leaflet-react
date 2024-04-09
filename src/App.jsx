@@ -6,12 +6,12 @@ import { RiShip2Line, RiDraggable, RiFilterFill, RiFilterOffLine } from "react-i
 import { FaBroadcastTower } from "react-icons/fa";
 import { TbChartCircles } from "react-icons/tb";
 import { TfiLayoutLineSolid } from "react-icons/tfi";
+import { FaBookBookmark } from "react-icons/fa6";
 
 function App() {
 
     // Declare array to store bookmarks
     const [bookmarks, setBookmarks] = useState([]);
-
     // Declare state to store bookmark position
     const [bookmarkPosition, setBookmarkPosition] = useState(null);
 
@@ -26,30 +26,48 @@ function App() {
     });
 
 
+    // Bookmark List component
     const BookmarkList = ({ bookmarks }) => {
         return (
             <div>
-                <h1 style={{ fontWeight: 'bold', fontSize: '2em', padding: '2px' }}>Bookmarks</h1>
+                <div className="bookmark-header">
+                    <div>Bookmarks</div>
+                    <FaBookBookmark />
+                </div>
                 {bookmarks.map((bookmark, index) => (
-                    <Button className="bookmark-list" key={index} variant="contained" color="primary" onClick={() => setBookmarkPosition(bookmark.latlng)} style={{ marginBottom: '4px' }} >
-                        <div>
-                            <h3 style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>{bookmark.type}</h3>
-                            <p style={{ margin: '0' }}>{bookmark.description}</p>
+                    <div className="bookmark">
+                    <Button className="bookmark-button" key={index} variant="contained" color="primary" onClick={() => setBookmarkPosition(bookmark.latlng)}>
+                    <div className="bookmark-content">
+                        <div className="bookmark-subheader">
+                        {getIcon(bookmark.type)}
+                        <h3 className="bookmark-type">{bookmark.type}</h3>
                         </div>
-                        <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0' }}>
-                            <span>Lat:</span>
-                            <span style={{ fontFamily: 'monospace' }}>{bookmark.latlng.lat.toFixed(2)}</span>
+                        <p className="bookmark-description">{bookmark.description}</p>
+                        <div className="bookmark-coordinates">
+                            <span>Lat: {bookmark.latlng.lat.toFixed(2)}</span>
+                            <span className='latlng-separator'> | </span>
+                            <span>Lng: {bookmark.latlng.lng.toFixed(2)}</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0' }}>
-                            <span>Lng:</span>
-                            <span style={{ fontFamily: 'monospace' }}>{bookmark.latlng.lng.toFixed(2)}</span>
-                        </div>
-                        </div>
+                    </div>
                     </Button>
+                    </div>
                 ))}
             </div>
         );
+    };
+
+    // Function to get the icon based on the type
+    const getIcon = (type) => {
+        switch(type) {
+            case 'RFF':
+                return <FaBroadcastTower size={18} />;
+            case 'Signal':
+                return <BsBroadcast size={18} />;
+            case 'Boat':
+                return <RiShip2Line size={18} />;
+            default:
+                return null;
+        }
     };
 
     // Function to add a bookmark to the TOC
@@ -109,6 +127,7 @@ function App() {
                 <Button variant="outlined" color={!visibility.circles ? "error" : "success"} onClick={() => toggleVisibility('circles')}>
                     {!visibility.circles ? <RiFilterOffLine /> : <RiFilterFill />} Circles Visibility
                 </Button>
+                {/* Bookmark List */}
                 <BookmarkList bookmarks={bookmarks} />
             </div>
                 <MarkerProvider>
