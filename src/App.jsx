@@ -29,7 +29,7 @@ function App() {
   const BookmarkList = ({ bookmarks }) => {
     return (
       <div>
-        <div className="flex items-center gap-5 font-bold text-4xl p-1 mb-0 ml-5 underline ">
+        <div className="flex items-center gap-5 font-bold text-2xl p-1 mb-0 ml-5 underline ">
           <div>Bookmarks</div>
           <FaBookBookmark size={34}/>
         </div>
@@ -116,7 +116,7 @@ function App() {
 
   return (
     <div className="flex flex-row bg-gray-300">
-      <div className="flex flex-col w-96 h-full gap-2 py-4 px-4e bg-gray-300">
+      <div className="flex flex-col w-96 h-full gap-2 py-4 px-4 bg-gray-300">
 
         {/* Mode Buttons*/}
         <ModeButton mode="dragging">

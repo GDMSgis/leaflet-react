@@ -121,6 +121,11 @@ const MarkerProvider = ({ children }) => {
     setPopup(null);
   };
 
+  const updateClickedMarker = (latlng) => {
+    const m = markers.filter(x => x.latlng.lat === latlng.lat || x.latlng.lng === latlng.lng);
+    setClickedMarker(m.length > 0 ? m[0] : null);
+  };
+
   const displayPopup = setPopup;
 
   return (
@@ -139,7 +144,7 @@ const MarkerProvider = ({ children }) => {
         areaTmpLines,
         click,
         clickedMarker,
-        setClickedMarker,
+        updateClickedMarker,
         popup,
         displayPopup,
         clickEvent,
@@ -151,7 +156,6 @@ const MarkerProvider = ({ children }) => {
 
 const CustomMarker = ({
   marker,
-  addBookmark,
 }) => {
   let icon;
   switch (marker.type) {
@@ -170,18 +174,18 @@ const CustomMarker = ({
 
   const {
     clickEvent,
-    setClickedMarker,
+    updateClickedMarker,
     displayPopup,
   } = useContext(MarkerContext);
 
   const onMarkerLeftClick = (e) => {
     clickEvent(e);
-    setClickedMarker(e.latlng)
+    updateClickedMarker(e.latlng)
   };
 
   const onMarkerRightClick = (e) => {
     clickEvent(e);
-    setClickedMarker(e.latlng)
+    updateClickedMarker(e.latlng)
     displayPopup("contextmenu");
   };
 
@@ -202,12 +206,6 @@ const CustomMarker = ({
         {marker.description}
         <br />
         Ping Time: {marker.pingTime}
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => addBookmark(marker)}
-        >
-          Add to bookmarks
-        </button>
       </Popup>
     </LeafletMarker>
   );
@@ -395,6 +393,13 @@ const MyMap = ({
       action: () => displayPopup("inspect"),
     },
     {
+      name: "Add to bookmarks",
+      action: () => {
+        addBookmark(clickedMarker);
+        displayPopup(null);
+      },
+    },
+    {
       name: "Delete",
       action: () => {
         deleteMarker(clickedMarker);
@@ -453,7 +458,6 @@ const MyMap = ({
         {markers.filter(marker => visibility[marker.type]).map((marker, index) => (
           <CustomMarker
             marker={marker}
-            addBookmark={addBookmark}
           />
         ))}
 
