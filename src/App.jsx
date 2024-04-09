@@ -147,36 +147,22 @@ function App() {
           setBookmarkPosition={setBookmarkPosition}
         />
       </MarkerProvider>
+
       <div
+        class={"absolute top-5 left-1/2 bg-black bg-opacity-75 text-white font-bold"
+          + " shadow shadow-gray-600 text-xl px-4 py-2 rounded-lg text-center"}
         style={{
-          position: 'absolute',
-          top: '20px', // Moved to top
-          left: '50%',
-          transform: 'translateX(-50%)', // Center horizontally
-          backgroundColor: 'rgba(0, 0, 0, 0.75)', // Dark background
-          color: 'white', // Blue text
-          padding: '8px 16px',
-          borderRadius: '8px',
           zIndex: 1000, // Above map elements
-          fontSize: '1.3rem', // Larger text
-          fontWeight: 'bold',
-          textAlign: 'center',
-          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', // Optional shadow for better visibility
         }}
       >
-        {/* Coordinate Table */}
-        <table style={{ width: '100%' }}>
-          <tbody>
-            <tr>
-              <td style={{ textAlign: 'left',paddingRight:'1em' }}>Lat:</td>
-              <td style={{ textAlign: 'right' }}>{cursorPosition.lat.toFixed(5)}</td>
-            </tr>
-            <tr>
-              <td style={{ textAlign: 'left', paddingRight:'1em'}}>Lon:</td>
-              <td style={{ textAlign: 'right' }}>{cursorPosition.lng.toFixed(5)}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="flex justify-between">
+          <p>Lat:</p>
+          <p>{cursorPosition.lat.toFixed(5)}</p>
+        </div>
+        <div class="flex justify-between">
+          <p>Lon:</p>
+          <p>{cursorPosition.lng.toFixed(5)}</p>
+        </div>
       </div>
     </div>
   );
