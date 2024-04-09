@@ -19,6 +19,7 @@ import 'leaflet/dist/leaflet.css';
 import {BsBroadcast} from "react-icons/bs";
 import MarkerContextMenu from "./MarkerContextMenu";
 
+
 // Custom icon creation function
 const createCustomIcon = (icon) => {
   const customMarkerHtml = renderToStaticMarkup(icon);
@@ -136,22 +137,22 @@ const MarkerProvider = ({ children }) => {
         addAreaLine,
         areaFirstClick,
         areaTmpLines,
-
         click,
         clickedMarker,
         setClickedMarker,
         popup,
         displayPopup,
         clickEvent,
-
       }}>
       {children}
     </MarkerContext.Provider>
   );
 };
 
-
-const CustomMarker = ({ marker }) => {
+const CustomMarker = ({
+  marker,
+  addBookmark,
+}) => {
   let icon;
   switch (marker.type) {
   case 'RFF':
@@ -197,7 +198,17 @@ const CustomMarker = ({ marker }) => {
         }
       }}
     >
-      <Popup>{marker.description}<br />Ping Time: {marker.pingTime}</Popup>
+      <Popup>
+        {marker.description}
+        <br />
+        Ping Time: {marker.pingTime}
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => addBookmark(marker)}
+        >
+          Add to bookmarks
+        </button>
+      </Popup>
     </LeafletMarker>
   );
 };
@@ -207,23 +218,10 @@ const MapInteractions = ({ currentInteractionMode, setCursorPosition }) => {
   const {
     markers,
     addMarker,
-    deleteMarker,
-    lines,
     addLine,
-    circles,
     addCircle,
-    areas,
     addAreaLine,
-    areaFirstClick,
-    areaTmpLines,
-
-    click,
-    clickedMarker,
-    setClickedMarker,
-    popup,
-    displayPopup,
     clickEvent,
-
   } = useContext(MarkerContext);
 
   // Function to find the nearest RFF marker
@@ -364,7 +362,14 @@ const Inspect = () => {
   )
 };
 
-const MyMap = ({ currentInteractionMode, visibility, setCursorPosition }) => {
+const MyMap = ({
+  currentInteractionMode,
+  visibility,
+  setCursorPosition,
+  addBookmark,
+  bookmarkPosition,
+  setBookmarkPosition,
+}) => {
   const mapRef = useRef(); // Create a ref for the map
 
   const {
@@ -419,6 +424,19 @@ const MyMap = ({ currentInteractionMode, visibility, setCursorPosition }) => {
     }
   }, [setCursorPosition]);
 
+  // TODO move in MapInteractions
+  // If bookmark position is set, fly to that position
+  useEffect(() => {
+    if (bookmarkPosition && mapRef.current) {
+      const mapInstance = mapRef.current;
+      mapInstance.flyTo(bookmarkPosition, 9);
+
+      // Update the bookmark position state after flying to the location (thank you andy)
+      setBookmarkPosition(null);
+
+    }
+  }, [bookmarkPosition]);
+
   return (
     <>
       <MapContainer
@@ -434,8 +452,8 @@ const MyMap = ({ currentInteractionMode, visibility, setCursorPosition }) => {
         />
         {markers.filter(marker => visibility[marker.type]).map((marker, index) => (
           <CustomMarker
-            key={index}
             marker={marker}
+            addBookmark={addBookmark}
           />
         ))}
 
