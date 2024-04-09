@@ -30,26 +30,26 @@ function App() {
     const BookmarkList = ({ bookmarks }) => {
         return (
             <div>
-                <div className="bookmark-header">
+                <div className="flex items-center gap-5 font-bold text-4xl p-1 mb-0 ml-5 underline ">
                     <div>Bookmarks</div>
-                    <FaBookBookmark />
+                    <FaBookBookmark size={34}/>
                 </div>
                 {bookmarks.map((bookmark, index) => (
-                    <div className="bookmark">
-                    <Button className="bookmark-button" key={index} variant="contained" color="primary" onClick={() => setBookmarkPosition(bookmark.latlng)}>
-                    <div className="bookmark-content">
-                        <div className="bookmark-subheader">
-                        {getIcon(bookmark.type)}
-                        <h3 className="bookmark-type">{bookmark.type}</h3>
-                        </div>
-                        <p className="bookmark-description">{bookmark.description}</p>
-                        <div className="bookmark-coordinates">
-                            <span>Lat: {bookmark.latlng.lat.toFixed(2)}</span>
-                            <span className='latlng-separator'> | </span>
-                            <span>Lng: {bookmark.latlng.lng.toFixed(2)}</span>
-                        </div>
-                    </div>
-                    </Button>
+                    <div className="mb-2 relative">
+                        <Button className="w-full top-3 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white p-2 rounded-2xl z-10 text-4xl font-bold text-center shadow-md flex flex-col items-start" key={index} variant="contained" color="primary" onClick={() => setBookmarkPosition(bookmark.latlng)}>
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-6 font-bold text-xl p-1 ml-6">
+                                    {getIcon(bookmark.type)}
+                                    <h3 className="text-xl font-bold">{bookmark.type}</h3>
+                                </div>
+                                <p className="text-sm m-0">{bookmark.description}</p>
+                                <div className="text-xs text-white">
+                                    <span>Lat: {bookmark.latlng.lat.toFixed(2)}</span>
+                                    <span className='font-bold mx-1'> | </span>
+                                    <span>Lng: {bookmark.latlng.lng.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </Button>
                     </div>
                 ))}
             </div>

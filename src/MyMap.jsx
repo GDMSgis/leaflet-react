@@ -72,7 +72,7 @@ const CustomMarker = ({ marker, addBookmark }) => {
 	return (
 		<LeafletMarker position={marker.latlng} icon={icon}>
 			<Popup>{marker.description}<br />Ping Time: {marker.pingTime}
-			<button className="add-bookmark-button" onClick={() => addBookmark(marker)}>
+			<button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => addBookmark(marker)}>
 				Add to bookmarks
 			</button>
 			</Popup>
