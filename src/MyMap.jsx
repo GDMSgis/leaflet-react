@@ -21,7 +21,7 @@ import MarkerContextMenu from "./MarkerContextMenu";
 
 
 // Custom icon creation function
-const createCustomIcon = (icon) => {
+function createCustomIcon(icon) {
   const customMarkerHtml = renderToStaticMarkup(icon);
   return L.divIcon({
     html: customMarkerHtml,
@@ -37,7 +37,7 @@ const signalIcon = createCustomIcon(<BsBroadcast size={25} />);
 const boatIcon = createCustomIcon(<RiShip2Line size={25} />);
 
 const MarkerContext = createContext(null);
-const MarkerProvider = ({ children }) => {
+function MarkerProvider({ children }) {
   const [markers, setMarkers] = useState([]);
   const [lines, setLines] = useState([]);
   const [areas, setAreas] = useState([]);
@@ -57,28 +57,28 @@ const MarkerProvider = ({ children }) => {
 
   const [popup, setPopup] = useState(null);
 
-  const addMarker = (latlng, type, description, audioFile = null) => {
+  function addMarker(latlng, type, description, audioFile = null) {
     const pingTime = new Date().toISOString();
     setMarkers([...markers, { latlng, type, description, audioFile, pingTime }]);
   };
 
-  const deleteMarker = (latlng) => {
+  function deleteMarker(latlng) {
     setMarkers(markers.filter(x => x.latlng.lat !== latlng.lat || x.latlng.lng !== latlng.lng))
   };
 
-  const addLine = (start, end) => {
+  function addLine(start, end) {
     setLines([...lines, { start, end }]);
   };
 
-  const addCircle = (center, radius) => {
+  function addCircle(center, radius) {
     setCircles([...circles, { center, radius }]);
   };
 
-  const addArea = () => {
+  function addArea() {
     setAreas([...areas, [...areaTmpLines, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [areaFirstClick.mapLat, areaFirstClick.mapLng]]]])
   };
 
-  const addAreaLine = (x, y, lat, lng) => {
+  function addAreaLine(x, y, lat, lng) {
     if (areaFirstClick === null) {
       setAreaFirstClick({
         winX: x,
@@ -111,7 +111,7 @@ const MarkerProvider = ({ children }) => {
     }
   };
 
-  const clickEvent = (e) => {
+  function clickEvent(e) {
     setClick({
       winX: e.originalEvent.x,
       winY: e.originalEvent.y,
@@ -121,7 +121,7 @@ const MarkerProvider = ({ children }) => {
     setPopup(null);
   };
 
-  const updateClickedMarker = (latlng) => {
+  function updateClickedMarker(latlng) {
     if (latlng === null) {
       setClickedMarker(null);
     }
@@ -159,9 +159,7 @@ const MarkerProvider = ({ children }) => {
   );
 };
 
-const CustomMarker = ({
-  marker,
-}) => {
+function CustomMarker({marker}) {
   let icon;
   switch (marker.type) {
   case 'RFF':
@@ -183,12 +181,12 @@ const CustomMarker = ({
     displayPopup,
   } = useContext(MarkerContext);
 
-  const onMarkerLeftClick = (e) => {
+  function onMarkerLeftClick(e) {
     clickEvent(e);
     updateClickedMarker(e.latlng)
   };
 
-  const onMarkerRightClick = (e) => {
+  function onMarkerRightClick(e) {
     clickEvent(e);
     updateClickedMarker(e.latlng)
     displayPopup("contextmenu");
@@ -216,7 +214,7 @@ const CustomMarker = ({
   );
 };
 
-const MapInteractions = ({ currentInteractionMode, setCursorPosition }) => {
+function MapInteractions({ currentInteractionMode, setCursorPosition }) {
   const map = useMap();
   const {
     markers,
@@ -228,7 +226,7 @@ const MapInteractions = ({ currentInteractionMode, setCursorPosition }) => {
   } = useContext(MarkerContext);
 
   // Function to find the nearest RFF marker
-  const findNearestRFFMarker = (latlng) => {
+  function findNearestRFFMarker(latlng) {
     let nearestMarker = null;
     let nearestDistance = Infinity;
 
@@ -245,11 +243,11 @@ const MapInteractions = ({ currentInteractionMode, setCursorPosition }) => {
     return nearestMarker ? nearestMarker.latlng : null;
   };
 
-  const onMapMouseMove = (e) => {
+  function onMapMouseMove(e) {
     setCursorPosition(e.latlng);
   };
 
-  const onMapLeftClick = (e) => {
+  function onMapLeftClick(e) {
     clickEvent(e);
 
     if (currentInteractionMode === "dragging") {
@@ -280,7 +278,7 @@ const MapInteractions = ({ currentInteractionMode, setCursorPosition }) => {
     }
   };
 
-  const onMapRightClick = (e) => {
+  function onMapRightClick(e) {
     clickEvent(e);
   };
 
@@ -308,7 +306,7 @@ const MapInteractions = ({ currentInteractionMode, setCursorPosition }) => {
   return null;
 };
 
-const Inspect = () => {
+function Inspect() {
   const {
     click,
     displayPopup,
@@ -320,20 +318,20 @@ const Inspect = () => {
   // We set to 1000 to get above all of that.
   return (
     <div
-      class="absolute flex justify-center items-center w-full h-full bg-black bg-opacity-30"
+      className="absolute flex justify-center items-center w-full h-full bg-black bg-opacity-30"
       style={{ zIndex: 1000 }}
     >
       <div
-        class="flex flex-col justify-between bg-white p-10 w-1/3 h-1/2 rounded-md border shadow shadow-gray-600"
+        className="flex flex-col justify-between bg-white p-10 w-1/3 h-1/2 rounded-md border shadow shadow-gray-600"
       >
-        <div class="flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
           <div>
             <label>Title:</label>
-            <input class="border"/>
+            <input className="border rounded-md"/>
           </div>
           <div>
             <label>Type:</label>
-            <select class={buttonStyle}>
+            <select className={buttonStyle}>
               <option></option>
               <option>Sail Boat</option>
               <option>Cruise Ship</option>
@@ -350,12 +348,12 @@ const Inspect = () => {
             <p>{click.mapLng}</p>
           </div>
           <label>Audio:</label>
-          <button class={buttonStyle}>Playback Audio</button>
-          <button class={buttonStyle}>Upload Audio</button>
+          <button className={buttonStyle}>Playback Audio</button>
+          <button className={buttonStyle}>Upload Audio</button>
         </div>
-        <div class="flex w-full justify-center items-center">
+        <div className="flex w-full justify-center items-center">
           <button
-            class={buttonStyle}
+            className={buttonStyle}
             onClick={e => displayPopup(null)}>
             Close
           </button>
@@ -365,14 +363,14 @@ const Inspect = () => {
   )
 };
 
-const MyMap = ({
+function MyMap({
   currentInteractionMode,
   visibility,
   setCursorPosition,
   addBookmark,
   bookmarkPosition,
   setBookmarkPosition,
-}) => {
+}) {
   const mapRef = useRef(); // Create a ref for the map
 
   const {
