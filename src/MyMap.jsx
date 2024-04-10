@@ -122,8 +122,13 @@ const MarkerProvider = ({ children }) => {
   };
 
   const updateClickedMarker = (latlng) => {
-    const m = markers.filter(x => x.latlng.lat === latlng.lat || x.latlng.lng === latlng.lng);
-    setClickedMarker(m.length > 0 ? m[0] : null);
+    if (latlng === null) {
+      setClickedMarker(null);
+    }
+    else {
+      const m = markers.filter(x => x.latlng.lat === latlng.lat || x.latlng.lng === latlng.lng);
+      setClickedMarker(m.length > 0 ? m[0] : null);
+    }
   };
 
   const displayPopup = setPopup;
@@ -376,7 +381,7 @@ const MyMap = ({
     circles,
     deleteMarker,
     clickedMarker,
-    setClickedMarker,
+    updateClickedMarker,
     click,
     popup,
     displayPopup,
@@ -402,8 +407,8 @@ const MyMap = ({
     {
       name: "Delete",
       action: () => {
-        deleteMarker(clickedMarker);
-        setClickedMarker(null);
+        deleteMarker(clickedMarker.latlng);
+        updateClickedMarker(null);
         displayPopup(null);
       },
     },
