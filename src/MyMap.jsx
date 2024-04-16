@@ -29,7 +29,7 @@ function createCustomIcon(icon) {
     popupAnchor: [0,0],
     className: 'custom-icon'
   });
-};
+}
 
 // Pre-defined icons using React Icons
 const rffIcon = createCustomIcon(<FaBroadcastTower size={25} />);
@@ -60,23 +60,23 @@ function MarkerProvider({ children }) {
   function addMarker(latlng, type, description, audioFile = null) {
     const pingTime = new Date().toISOString();
     setMarkers([...markers, { latlng, type, description, audioFile, pingTime }]);
-  };
+  }
 
   function deleteMarker(latlng) {
     setMarkers(markers.filter(x => x.latlng.lat !== latlng.lat || x.latlng.lng !== latlng.lng))
-  };
+  }
 
-  function addLine(start, end) {
-    setLines([...lines, { start, end }]);
-  };
+  function addLines(newLines) {
+    setLines(prevLines => [...prevLines, ...newLines]);
+  }
 
   function addCircle(center, radius) {
     setCircles([...circles, { center, radius }]);
-  };
+  }
 
   function addArea() {
     setAreas([...areas, [...areaTmpLines, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [areaFirstClick.mapLat, areaFirstClick.mapLng]]]])
-  };
+  }
 
   function addAreaLine(x, y, lat, lng) {
     if (areaFirstClick === null) {
@@ -109,7 +109,7 @@ function MarkerProvider({ children }) {
         mapLng: lng,
       });
     }
-  };
+  }
 
   function clickEvent(e) {
     setClick({
@@ -119,7 +119,7 @@ function MarkerProvider({ children }) {
       mapLng: e.latlng.lng
     });
     setPopup(null);
-  };
+  }
 
   function updateClickedMarker(latlng) {
     if (latlng === null) {
@@ -129,7 +129,7 @@ function MarkerProvider({ children }) {
       const m = markers.filter(x => x.latlng.lat === latlng.lat || x.latlng.lng === latlng.lng);
       setClickedMarker(m.length > 0 ? m[0] : null);
     }
-  };
+  }
 
   const displayPopup = setPopup;
 
@@ -140,7 +140,7 @@ function MarkerProvider({ children }) {
         addMarker,
         deleteMarker,
         lines,
-        addLine,
+        addLines,
         circles,
         addCircle,
         areas,
@@ -157,7 +157,7 @@ function MarkerProvider({ children }) {
       {children}
     </MarkerContext.Provider>
   );
-};
+}
 
 function CustomMarker({marker}) {
   let icon;
@@ -184,13 +184,13 @@ function CustomMarker({marker}) {
   function onMarkerLeftClick(e) {
     clickEvent(e);
     updateClickedMarker(e.latlng)
-  };
+  }
 
   function onMarkerRightClick(e) {
     clickEvent(e);
     updateClickedMarker(e.latlng)
     displayPopup("contextmenu");
-  };
+  }
 
   return (
     <LeafletMarker
@@ -212,40 +212,69 @@ function CustomMarker({marker}) {
       </Popup>
     </LeafletMarker>
   );
-};
+}
 
 function MapInteractions({ currentInteractionMode, setCursorPosition }) {
   const map = useMap();
   const {
     markers,
     addMarker,
-    addLine,
+    addLines,
     addCircle,
     addAreaLine,
     clickEvent,
   } = useContext(MarkerContext);
 
-  // Function to find the nearest RFF marker
-  function findNearestRFFMarker(latlng) {
-    let nearestMarker = null;
-    let nearestDistance = Infinity;
+  function findAllRFFMarkersWithinRadius(latlng, radius = 32186.9) { // 20 miles in meters
+    let nearbyMarkers = [];
 
     markers.forEach((marker) => {
       if (marker.type === 'RFF') {
         const distance = map.distance(latlng, marker.latlng);
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestMarker = marker;
+        if (distance <= radius) {
+          nearbyMarkers.push(marker);
         }
       }
     });
+    // console.log(nearbyMarkers)
+    return nearbyMarkers;
+  }
 
-    return nearestMarker ? nearestMarker.latlng : null;
-  };
+  function calculateEndPoint(origin, bearing, distance) {
+    const R = 6371e3; // Earth radius in meters
+    const angular = distance / R; // Angular distance in radia// ns
+    const radians = bearing * Math.PI / 180; // Convert bearing to radians
+
+    const lat1 = origin.lat * Math.PI / 180; // Origin latitude in radians
+    const lon1 = origin.lng * Math.PI / 180; // Origin longitude in radians
+
+    const lat2 = Math.asin(Math.sin(lat1) * Math.cos(angular) + Math.cos(lat1) * Math.sin(angular) * Math.cos(radians));
+    const lon2 = lon1 + Math.atan2(Math.sin(radians) * Math.sin(angular) * Math.cos(lat1), Math.cos(angular) - Math.sin(lat1) * Math.sin(lat2));
+
+    return {
+      lat: lat2 * 180 / Math.PI,
+      lng: (lon2 * 180 / Math.PI + 540) % 360 - 180 // Normalize to -180...+180
+    };
+  }
+
+  function getBearing(startLat, startLng, destLat, destLng) {
+    startLat = startLat * Math.PI / 180;
+    startLng = startLng * Math.PI / 180;
+    destLat = destLat * Math.PI / 180;
+    destLng = destLng * Math.PI / 180;
+
+    const y = Math.sin(destLng - startLng) * Math.cos(destLat);
+    const x = Math.cos(startLat) * Math.sin(destLat) -
+        Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
+    const atan2 = Math.atan2(y, x);
+    return (atan2 * 180 / Math.PI + 360) % 360; // in degrees
+  }
+
+
 
   function onMapMouseMove(e) {
     setCursorPosition(e.latlng);
-  };
+  }
 
   function onMapLeftClick(e) {
     clickEvent(e);
@@ -256,10 +285,17 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
 
     else if (currentInteractionMode === 'lines') {
       // On click, find the nearest RFF marker and draw a line to it
-      const nearestRFF = findNearestRFFMarker(e.latlng);
-      if (nearestRFF) {
-        addLine(e.latlng, nearestRFF);
-      }
+      const nearbyRFFs = findAllRFFMarkersWithinRadius(e.latlng);
+      // console.log(`Found ${nearbyRFFs.length} RFFs within range`);
+
+      const newLines = [];
+      nearbyRFFs.forEach(rff => {
+        const bearing = getBearing(rff.latlng.lat, rff.latlng.lng, e.latlng.lat, e.latlng.lng);
+        const endPoint = calculateEndPoint(rff.latlng, bearing, 32186.9); // 20 miles in meters
+        newLines.push({ start: rff.latlng, end: endPoint });
+      });
+
+      addLines(newLines);
     }
 
     else if (currentInteractionMode === 'circles') {
@@ -276,11 +312,11 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
     else if (currentInteractionMode === "area") {
       addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng);
     }
-  };
+  }
 
   function onMapRightClick(e) {
     clickEvent(e);
-  };
+  }
 
   useEffect(() => {
     // Enable or disable map dragging based on the current interaction mode
@@ -304,7 +340,7 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
   });
 
   return null;
-};
+}
 
 function Inspect() {
   const {
@@ -361,7 +397,7 @@ function Inspect() {
       </div>
     </div>
   )
-};
+}
 
 function MyMap({
   currentInteractionMode,
@@ -458,18 +494,19 @@ function MyMap({
           currentInteractionMode={currentInteractionMode}
           setCursorPosition={setCursorPosition}
         />
-        {markers.filter(marker => visibility[marker.type]).map((marker, index) => (
-          <CustomMarker
-            marker={marker}
-          />
+        {markers.filter(marker => visibility[marker.type]).map((marker) => (
+            <CustomMarker
+                key={`${marker.type}-${marker.latlng.lat}-${marker.latlng.lng}`}
+                marker={marker}
+            />
         ))}
 
-        {visibility.lines && lines.map((line, index) => (
-          <Polyline
-            key={`line-${index}`}
-            positions={[line.start, line.end]}
-            color="red"
-          />
+        {visibility.lines && lines.map((line) => (
+            <Polyline
+                key={`line-${line.start.lat}-${line.start.lng}-${line.end.lat}-${line.end.lng}`}
+                positions={[line.start, line.end]}
+                color="red"
+            />
         ))}
 
         {visibility.circles && circles.map((circle, index) => (
@@ -521,6 +558,6 @@ function MyMap({
       }
     </>
   );
-};
+}
 
 export { MyMap, MarkerProvider };
