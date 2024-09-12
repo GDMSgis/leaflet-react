@@ -115,6 +115,17 @@ function App() {
     )
   };
 
+  async function testClick() {
+    const res = await fetch("http://localhost:8000/");
+    if (res.ok) {
+      let data = await res.json();
+      alert(JSON.stringify(data));
+    }
+    else {
+      alert("Error");
+    }
+  }
+
   return (
     <div className="flex flex-row bg-gray-300">
       <div className="flex flex-col w-96 h-full max-h-screen gap-2 py-4 px-4 bg-gray-300">
@@ -175,6 +186,11 @@ function App() {
 
         {/* Bookmark List */}
         <BookmarkList bookmarks={bookmarks} />
+
+        <button className='bg-orange-500 p-3 rounded-lg'
+          onClick={testClick}>
+          Hello world
+        </button>
       </div>
       <MarkerProvider>
         <MyMap
