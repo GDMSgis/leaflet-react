@@ -225,7 +225,8 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
     clickEvent,
   } = useContext(MarkerContext);
 
-  function findAllRFFMarkersWithinRadius(latlng, radius = 32186.9) { // 20 miles in meters
+  // function findAllRFFMarkersWithinRadius(latlng, radius = 32186.9) { // 20 miles in meters
+  function findAllRFFMarkersWithinRadius(latlng, radius = 102186.9) { // 20 miles in meters
     let nearbyMarkers = [];
 
     markers.forEach((marker) => {
@@ -291,7 +292,8 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
       const newLines = [];
       nearbyRFFs.forEach(rff => {
         const bearing = getBearing(rff.latlng.lat, rff.latlng.lng, e.latlng.lat, e.latlng.lng);
-        const endPoint = calculateEndPoint(rff.latlng, bearing, 32186.9); // 20 miles in meters
+        // const endPoint = calculateEndPoint(rff.latlng, bearing, 32186.9); // 20 miles in meters
+        const endPoint = calculateEndPoint(rff.latlng, bearing, 102186.9); // 20 miles in meters
         newLines.push({ start: rff.latlng, end: endPoint });
       });
 
