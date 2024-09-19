@@ -36,9 +36,51 @@ const rffIcon = createCustomIcon(<FaBroadcastTower size={25} />);
 const signalIcon = createCustomIcon(<BsBroadcast size={25} />);
 const boatIcon = createCustomIcon(<RiShip2Line size={25} />);
 
+function calculateEndPoint(origin, bearing, distance) {
+  const R = 6371e3; // Earth radius in meters
+  const angular = distance / R; // Angular distance in radia// ns
+  const radians = bearing * Math.PI / 180; // Convert bearing to radians
+
+  const lat1 = origin.lat * Math.PI / 180; // Origin latitude in radians
+  const lon1 = origin.lng * Math.PI / 180; // Origin longitude in radians
+
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(angular) + Math.cos(lat1) * Math.sin(angular) * Math.cos(radians));
+  const lon2 = lon1 + Math.atan2(Math.sin(radians) * Math.sin(angular) * Math.cos(lat1), Math.cos(angular) - Math.sin(lat1) * Math.sin(lat2));
+
+  return {
+    lat: lat2 * 180 / Math.PI,
+    lng: (lon2 * 180 / Math.PI + 540) % 360 - 180 // Normalize to -180...+180
+  };
+}
+
+function getBearing(startLat, startLng, destLat, destLng) {
+  startLat = startLat * Math.PI / 180;
+  startLng = startLng * Math.PI / 180;
+  destLat = destLat * Math.PI / 180;
+  destLng = destLng * Math.PI / 180;
+
+  const y = Math.sin(destLng - startLng) * Math.cos(destLat);
+  const x = Math.cos(startLat) * Math.sin(destLat) -
+    Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
+  const atan2 = Math.atan2(y, x);
+  return (atan2 * 180 / Math.PI + 360) % 360; // in degrees
+}
+
 const MarkerContext = createContext(null);
 function MarkerProvider({ children }) {
-  const [markers, setMarkers] = useState([]);
+  const [markers, setMarkers] = useState([
+    {
+      name: "San Francisco",
+      latlng: {
+        lat: 37.76,
+        lng: -122.45,
+      },
+      type: "RFF",
+      description: "",
+      audioFile: null,
+      pingTime: new Date().toISOString(),
+    }
+  ]);
   const [lines, setLines] = useState([]);
   const [areas, setAreas] = useState([]);
   const [circles, setCircles] = useState([]);
@@ -57,9 +99,9 @@ function MarkerProvider({ children }) {
 
   const [popup, setPopup] = useState(null);
 
-  function addMarker(latlng, type, description, audioFile = null) {
-    const pingTime = new Date().toISOString();
-    setMarkers([...markers, { latlng, type, description, audioFile, pingTime }]);
+  function addMarker(latlng, type, description, audioFile = null, pingTime = null, name = "") {
+    const pt = pingTime ?? new Date().toISOString();
+    setMarkers([...markers, { latlng, type, description, audioFile, pingTime: pt, name }]);
   }
 
   function deleteMarker(latlng) {
@@ -240,38 +282,6 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
     // console.log(nearbyMarkers)
     return nearbyMarkers;
   }
-
-  function calculateEndPoint(origin, bearing, distance) {
-    const R = 6371e3; // Earth radius in meters
-    const angular = distance / R; // Angular distance in radia// ns
-    const radians = bearing * Math.PI / 180; // Convert bearing to radians
-
-    const lat1 = origin.lat * Math.PI / 180; // Origin latitude in radians
-    const lon1 = origin.lng * Math.PI / 180; // Origin longitude in radians
-
-    const lat2 = Math.asin(Math.sin(lat1) * Math.cos(angular) + Math.cos(lat1) * Math.sin(angular) * Math.cos(radians));
-    const lon2 = lon1 + Math.atan2(Math.sin(radians) * Math.sin(angular) * Math.cos(lat1), Math.cos(angular) - Math.sin(lat1) * Math.sin(lat2));
-
-    return {
-      lat: lat2 * 180 / Math.PI,
-      lng: (lon2 * 180 / Math.PI + 540) % 360 - 180 // Normalize to -180...+180
-    };
-  }
-
-  function getBearing(startLat, startLng, destLat, destLng) {
-    startLat = startLat * Math.PI / 180;
-    startLng = startLng * Math.PI / 180;
-    destLat = destLat * Math.PI / 180;
-    destLng = destLng * Math.PI / 180;
-
-    const y = Math.sin(destLng - startLng) * Math.cos(destLat);
-    const x = Math.cos(startLat) * Math.sin(destLat) -
-        Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
-    const atan2 = Math.atan2(y, x);
-    return (atan2 * 180 / Math.PI + 360) % 360; // in degrees
-  }
-
-
 
   function onMapMouseMove(e) {
     setCursorPosition(e.latlng);
@@ -562,4 +572,4 @@ function MyMap({
   );
 }
 
-export { MyMap, MarkerProvider };
+export { MyMap, MarkerProvider, MarkerContext, calculateEndPoint, getBearing };

@@ -7,7 +7,7 @@ mkShell {
     yarn
     (python311.withPackages (ps: with ps; [
       pip
-      flask
+      fastapi
     ]))
   ];
 

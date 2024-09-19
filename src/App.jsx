@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import {MyMap, MarkerProvider} from './MyMap';
+import React, { useState, useContext } from 'react';
+import { MyMap, MarkerContext, calculateEndPoint } from './MyMap';
 import Button from '@mui/material/Button';
 import { BsBroadcast } from "react-icons/bs";
 import { RiShip2Line, RiDraggable, RiFilterFill, RiFilterOffLine } from "react-icons/ri";
@@ -24,6 +24,12 @@ function App() {
     circles: true,
     areas: true,
   });
+
+  const {
+    addLines,
+    markers,
+  } = useContext(MarkerContext);
+
 
   // Bookmark List component
   function BookmarkList({ bookmarks }) {
@@ -115,15 +121,43 @@ function App() {
     )
   };
 
-  async function testClick() {
-    const res = await fetch("http://localhost:8000/");
-    if (res.ok) {
-      let data = await res.json();
-      alert(JSON.stringify(data));
-    }
-    else {
-      alert("Error");
-    }
+  // async function getAllCallers() {
+  //   const res = fetch("http://localhost:8000/caller/");
+  //   if (res.ok) {
+  //     let data = await res.json();
+  //     return data.data;
+  //   }
+  //   else {
+  //     return [];
+  //   }
+  // }
+
+  function getAllCallers() {
+    return fetch('http://localhost:8000/caller/')
+      .then((response) => {
+        return response.json().then((data) => {
+          return data;
+        }).catch((err) => {
+          console.log(err);
+        })
+      });
+  }
+
+  async function displayAllCallers() {
+    const latlngOfRffs = markers.filter(x => x.type === "RFF")
+      .reduce((acc, cur) => ({...acc, [cur.name]: cur.latlng}), {});
+    console.log(calculateEndPoint(latlngOfRffs['San Francisco'], 250, 100000));
+    // fetch('http://localhost:8000/caller/')
+    //   .then((response) => {
+    //     return response.json().then((data) => {
+    //       data.data[0].forEach(caller => addLines([{
+    //         start: latlngOfRffs[caller.rff1],
+    //         end: calculateEndPoint(latlngOfRffs[caller.rff1], Number(caller.bearing), 102186.9),
+    //       }]))
+    //     }).catch((err) => {
+    //       console.log(err);
+    //     })
+    //   });
   }
 
   return (
@@ -188,20 +222,18 @@ function App() {
         <BookmarkList bookmarks={bookmarks} />
 
         <button className='bg-orange-500 p-3 rounded-lg'
-          onClick={testClick}>
-          Hello world
+          onClick={displayAllCallers}>
+          Display All Callers
         </button>
       </div>
-      <MarkerProvider>
-        <MyMap
-          currentInteractionMode={currentInteractionMode}
-          visibility={visibility}
-          setCursorPosition={setCursorPosition} // Pass this prop down to MyMap
-          addBookmark={addBookmark}  // Pass props to myMap
-          bookmarkPosition={bookmarkPosition}
-          setBookmarkPosition={setBookmarkPosition}
-        />
-      </MarkerProvider>
+      <MyMap
+        currentInteractionMode={currentInteractionMode}
+        visibility={visibility}
+        setCursorPosition={setCursorPosition} // Pass this prop down to MyMap
+        addBookmark={addBookmark}  // Pass props to myMap
+        bookmarkPosition={bookmarkPosition}
+        setBookmarkPosition={setBookmarkPosition}
+      />
 
       <div
         className={"absolute top-5 left-1/2 bg-black bg-opacity-75 text-white font-bold"
