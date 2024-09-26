@@ -16,16 +16,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { FaBroadcastTower} from "react-icons/fa";
 import { RiShip2Line } from "react-icons/ri";
 import 'leaflet/dist/leaflet.css';
-import {BsBroadcast} from "react-icons/bs";
+import { BsBroadcast } from "react-icons/bs";
 import MarkerContextMenu from "./MarkerContextMenu";
-
 
 // Custom icon creation function
 function createCustomIcon(icon) {
   const customMarkerHtml = renderToStaticMarkup(icon);
   return L.divIcon({
     html: customMarkerHtml,
-    iconAnchor: [0,0],
+    iconAnchor: [12,12],
     popupAnchor: [0,0],
     className: 'custom-icon'
   });
@@ -36,9 +35,23 @@ const rffIcon = createCustomIcon(<FaBroadcastTower size={25} />);
 const signalIcon = createCustomIcon(<BsBroadcast size={25} />);
 const boatIcon = createCustomIcon(<RiShip2Line size={25} />);
 
+
+function getBearing(startLat, startLng, destLat, destLng) {
+  startLat = startLat * Math.PI / 180;
+  startLng = startLng * Math.PI / 180;
+  destLat = destLat * Math.PI / 180;
+  destLng = destLng * Math.PI / 180;
+
+  const y = Math.sin(destLng - startLng) * Math.cos(destLat);
+  const x = Math.cos(startLat) * Math.sin(destLat) -
+      Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
+  const atan2 = Math.atan2(y, x);
+  return Math.round((atan2 * 180 / Math.PI + 360) % 360).toString(); // Return bearing in degrees
+}
+
 function calculateEndPoint(origin, bearing, distance) {
   const R = 6371e3; // Earth radius in meters
-  const angular = distance / R; // Angular distance in radia// ns
+  const angular = distance / R; // Angular distance in radians
   const radians = bearing * Math.PI / 180; // Convert bearing to radians
 
   const lat1 = origin.lat * Math.PI / 180; // Origin latitude in radians
@@ -53,18 +66,6 @@ function calculateEndPoint(origin, bearing, distance) {
   };
 }
 
-function getBearing(startLat, startLng, destLat, destLng) {
-  startLat = startLat * Math.PI / 180;
-  startLng = startLng * Math.PI / 180;
-  destLat = destLat * Math.PI / 180;
-  destLng = destLng * Math.PI / 180;
-
-  const y = Math.sin(destLng - startLng) * Math.cos(destLat);
-  const x = Math.cos(startLat) * Math.sin(destLat) -
-    Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
-  const atan2 = Math.atan2(y, x);
-  return (atan2 * 180 / Math.PI + 360) % 360; // in degrees
-}
 
 const MarkerContext = createContext(null);
 function MarkerProvider({ children }) {
@@ -84,203 +85,282 @@ function MarkerProvider({ children }) {
   const [lines, setLines] = useState([]);
   const [areas, setAreas] = useState([]);
   const [circles, setCircles] = useState([]);
-
-  // null indicates no click
-  // { winX: number, winY: number, mapLat: number, mapLng: number}
-  // indicates click with win and map location
   const [click, setClick] = useState(null);
-
-  // Area creation states
   const [areaFirstClick, setAreaFirstClick] = useState(null);
   const [areaPrevClick, setAreaPrevClick] = useState(null);
   const [areaTmpLines, setAreaTmpLines] = useState([]);
-
   const [clickedMarker, setClickedMarker] = useState(null);
-
   const [popup, setPopup] = useState(null);
 
-  function addMarker(latlng, type, description, audioFile = null, pingTime = null, name = "") {
+  // Fetch markers/signals from MongoDB
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch('http://localhost:8000/caller/');
+        const result = await response.json();
+
+        if (result.data && result.data.length) {
+          setLines([]); // Clear existing lines
+          result.data[0].forEach(caller => {
+            const startLatLng = markers.find(marker => marker.name === caller.rff1)?.latlng;
+            if (startLatLng) {
+              const endLatLng = calculateEndPoint(startLatLng, Number(caller.bearing1), 160934.4);
+              // Add caller data to the line object for future reference
+              addLines([{ start: startLatLng, end: endLatLng, id: caller.id, channel: caller.channel, bearing1: caller.bearing1, rff1: caller.rff1, starttime: caller.starttime, stoptime: caller.stoptime, fix: caller.fix}]);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching signals from MongoDB:', error);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [markers]);
+
+  // Function to add a marker, determine the nearest RFF and calculate bearing
+  function addMarker(latlng, type, description, audioFile = null, pingTime = null, id = null) {
     const pt = pingTime ?? new Date().toISOString();
-    setMarkers([...markers, { latlng, type, description, audioFile, pingTime: pt, name }]);
+    const newMarker = { latlng, type, description, audioFile, pingTime: pt, id };
+
+    // Check if the marker being added is of type 'Signal'
+    if (type === 'Signal') {
+      const nearestRFF = findNearestRFF(latlng); // Find the nearest RFF marker
+      if (nearestRFF) {
+        const bearing = getBearing(nearestRFF.latlng.lat, nearestRFF.latlng.lng, latlng.lat, latlng.lng);
+        newMarker.bearing1 = bearing;  // Set the bearing
+        newMarker.rff1 = nearestRFF.name; // Set the nearest RFF name
+      }
+    }
+
+    setMarkers([...markers, newMarker]);
+
+    // Send to the database if it's a Signal marker
+    if (newMarker.rff1 && newMarker.bearing1) {
+      addSignalToDatabase(newMarker.rff1, newMarker.bearing1);  // Call the database function
+    }
+  }
+
+// Function to find the nearest RFF marker
+  function findNearestRFF(latlng) {
+    const rffMarkers = markers.filter(marker => marker.type === 'RFF');
+
+    let nearestRFF = null;
+    let minDistance = Infinity;
+
+    rffMarkers.forEach(rff => {
+      const distance = L.latLng(rff.latlng).distanceTo(latlng);  // Calculate distance using Leaflet
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestRFF = rff;  // Update nearest RFF
+      }
+    });
+
+    return nearestRFF;  // Return the nearest RFF marker
+  }
+
+
+
+// Updated function to add the signal marker to the database
+  async function addSignalToDatabase(rff1 = "---", bearing1 = "---") {
+    try {
+      const body = {
+        channel: "16",
+        bearing1,
+        rff1,
+        fix: "---",
+        starttime: new Date().toISOString(),
+        stoptime: "---",
+      };
+
+      const response = await fetch('http://localhost:8000/caller/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),  // Send the request without latlng
+      });
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      console.error('Error creating signal marker:', error);
+    }
+  }
+
+  async function updateSignalInDatabase(updatedData) {
+    try {
+      let id = updatedData.id;
+      delete updatedData['id'];
+      const response = await fetch(`http://localhost:8000/caller/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedData),
+      });
+
+      const result = await response.json();
+      console.info(result.data);
+      return result.data;
+    } catch (error) {
+      console.error('Error updating signal marker:', error);
+    }
   }
 
   function deleteMarker(latlng) {
-    setMarkers(markers.filter(x => x.latlng.lat !== latlng.lat || x.latlng.lng !== latlng.lng))
+    setMarkers(markers.filter(x => x.latlng.lat !== latlng.lat || x.latlng.lng !== latlng.lng));
   }
+
+  async function deleteSignalInDatabase(id) {
+    try {
+      const response = await fetch(`http://localhost:8000/caller/${id}`, {  // Pass id in URL
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setMarkers((prevMarkers) => prevMarkers.filter((marker) => marker.id !== id));  // Remove marker from state
+      } else {
+        console.error("Failed to delete marker:", response.statusText);
+      }
+    } catch (error) {
+      console.error('Error deleting signal marker:', error);
+    }
+  }
+
 
   function addLines(newLines) {
     setLines(prevLines => [...prevLines, ...newLines]);
+    handleLineIntersection(); // Check for intersections after adding new lines
   }
 
   function addCircle(center, radius) {
     setCircles([...circles, { center, radius }]);
   }
 
-  function addArea() {
-    setAreas([...areas, [...areaTmpLines, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [areaFirstClick.mapLat, areaFirstClick.mapLng]]]])
+  function checkLineIntersection(line1, line2) {
+    // Calculate if two lines intersect, return intersection point if any
+    // Basic line intersection logic here
+    // If they do intersect, return the latlng of the intersection
   }
 
+  function handleLineIntersection() {
+    lines.forEach((lineA, idxA) => {
+      lines.slice(idxA + 1).forEach((lineB) => {
+        const intersection = checkLineIntersection(lineA, lineB);
+        if (intersection) {
+          addCircle(intersection, 200); // Adjust radius as needed
+        }
+      });
+    });
+  }
+
+  function handleClickEvent(e) {
+    setClick({ winX: e.originalEvent.x, winY: e.originalEvent.y, mapLat: e.latlng.lat, mapLng: e.latlng.lng });
+    setPopup(null);
+  }
+  function addArea() {
+    setAreas([...areas, [...areaTmpLines, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [areaFirstClick.mapLat, areaFirstClick.mapLng]]]]);
+  }
   function addAreaLine(x, y, lat, lng) {
-    if (areaFirstClick === null) {
-      setAreaFirstClick({
-        winX: x,
-        winY: y,
-        mapLat: lat,
-        mapLng: lng,
-      });
-      setAreaPrevClick({
-        winX: x,
-        winY: y,
-        mapLat: lat,
-        mapLng: lng,
-      });
-    }
-    else if (Math.sqrt(Math.pow(areaFirstClick.winX - x, 2) + (areaFirstClick.winY - y, 2)) <= 7) {
+    // Check if this is the first click
+    if (!areaFirstClick) {
+      // Initialize first click (starting point)
+      setAreaFirstClick({ winX: x, winY: y, mapLat: lat, mapLng: lng });
+      setAreaPrevClick({ winX: x, winY: y, mapLat: lat, mapLng: lng });
+    } else if (
+        Math.sqrt(Math.pow(areaFirstClick.winX - x, 2) + Math.pow(areaFirstClick.winY - y, 2)) <= 7
+    ) {
+      // Complete the area if close enough to the starting point
       addArea();
       setAreaFirstClick(null);
       setAreaPrevClick(null);
       setAreaTmpLines([]);
-    }
-    else {
-      setAreaTmpLines([...areaTmpLines,
-        [[areaPrevClick.mapLat, areaPrevClick.mapLng], [lat, lng]]]);
-      setAreaPrevClick({
-        winX: x,
-        winY: y,
-        mapLat: lat,
-        mapLng: lng,
-      });
+    } else {
+      // Add a temporary line from the previous click to the current click
+      setAreaTmpLines([...areaTmpLines, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [lat, lng]]]);
+      setAreaPrevClick({ winX: x, winY: y, mapLat: lat, mapLng: lng });
     }
   }
-
-  function clickEvent(e) {
-    setClick({
-      winX: e.originalEvent.x,
-      winY: e.originalEvent.y,
-      mapLat: e.latlng.lat,
-      mapLng: e.latlng.lng
-    });
-    setPopup(null);
-  }
-
-  function updateClickedMarker(latlng) {
-    if (latlng === null) {
-      setClickedMarker(null);
-    }
-    else {
-      const m = markers.filter(x => x.latlng.lat === latlng.lat || x.latlng.lng === latlng.lng);
-      setClickedMarker(m.length > 0 ? m[0] : null);
-    }
-  }
-
-  const displayPopup = setPopup;
 
   return (
-    <MarkerContext.Provider
-      value={{
-        markers,
-        addMarker,
-        deleteMarker,
-        lines,
-        addLines,
-        circles,
-        addCircle,
-        areas,
-        addAreaLine,
-        areaFirstClick,
-        areaTmpLines,
-        click,
-        clickedMarker,
-        updateClickedMarker,
-        popup,
-        displayPopup,
-        clickEvent,
-      }}>
-      {children}
-    </MarkerContext.Provider>
+      <MarkerContext.Provider
+          value={{
+            markers,
+            addMarker,
+            addSignalToDatabase,
+            updateSignalInDatabase,
+            deleteSignalInDatabase,
+            lines,
+            addLines,
+            circles,
+            addCircle,
+            areas,
+            addAreaLine,
+            areaFirstClick,
+            areaTmpLines,
+            click,
+            clickedMarker,
+            popup,
+            setClickedMarker,
+            setPopup,
+            handleClickEvent, // Provide click handler
+          }}
+      >
+        {children}
+      </MarkerContext.Provider>
   );
 }
 
-function CustomMarker({marker}) {
+function CustomMarker({ marker }) {
   let icon;
   switch (marker.type) {
-  case 'RFF':
-    icon = rffIcon;
-    break;
-  case 'Signal':
-    icon = signalIcon;
-    break;
-  case 'Boat':
-    icon = boatIcon;
-    break;
-  default:
-    icon = L.icon({ iconUrl: 'default-icon.png' }); // Default case
+    case 'RFF':
+      icon = rffIcon;
+      break;
+    case 'Signal':
+      icon = signalIcon;
+      break;
+    case 'Boat':
+      icon = boatIcon;
+      break;
+    default:
+      icon = L.icon({ iconUrl: 'default-icon.png' });
   }
 
-  const {
-    clickEvent,
-    updateClickedMarker,
-    displayPopup,
-  } = useContext(MarkerContext);
+  const { handleClickEvent, setPopup, setClickedMarker } = useContext(MarkerContext);
 
   function onMarkerLeftClick(e) {
-    clickEvent(e);
-    updateClickedMarker(e.latlng)
+    handleClickEvent(e);
+    setClickedMarker(marker);
   }
 
   function onMarkerRightClick(e) {
-    clickEvent(e);
-    updateClickedMarker(e.latlng)
-    displayPopup("contextmenu");
+    handleClickEvent(e);
+    setClickedMarker(marker);
+    setPopup("contextmenu");
   }
 
   return (
-    <LeafletMarker
-      position={marker.latlng}
-      icon={icon}
-      eventHandlers={{
-        click: (e) => {
-          onMarkerLeftClick(e);
-        },
-        contextmenu: (e) => {
-          onMarkerRightClick(e);
-        }
-      }}
-    >
-      <Popup>
-        {marker.description}
-        <br />
-        Ping Time: {marker.pingTime}
-      </Popup>
-    </LeafletMarker>
+      <LeafletMarker
+          position={marker.latlng}
+          icon={icon}
+          eventHandlers={{
+            click: onMarkerLeftClick,
+            contextmenu: onMarkerRightClick
+          }}
+      >
+        <Popup>
+          {marker.description}
+          <br />
+          Ping Time: {marker.pingTime}
+        </Popup>
+      </LeafletMarker>
   );
 }
 
 function MapInteractions({ currentInteractionMode, setCursorPosition }) {
   const map = useMap();
-  const {
-    markers,
-    addMarker,
-    addLines,
-    addCircle,
-    addAreaLine,
-    clickEvent,
-  } = useContext(MarkerContext);
+  const { markers, addMarker, addSignalToDatabase, addLines, addCircle, addAreaLine, handleClickEvent } = useContext(MarkerContext);
 
-  // function findAllRFFMarkersWithinRadius(latlng, radius = 32186.9) { // 20 miles in meters
-  function findAllRFFMarkersWithinRadius(latlng, radius = 102186.9) { // 20 miles in meters
-    let nearbyMarkers = [];
-
-    markers.forEach((marker) => {
-      if (marker.type === 'RFF') {
-        const distance = map.distance(latlng, marker.latlng);
-        if (distance <= radius) {
-          nearbyMarkers.push(marker);
-        }
-      }
-    });
-    // console.log(nearbyMarkers)
-    return nearbyMarkers;
+  function findAllRFFMarkersWithinRadius(latlng, radius = Number.maxValue) { // will change later
+    return markers.filter(marker => marker.type === 'RFF' && L.latLng(marker.latlng).distanceTo(latlng) <= radius);
   }
 
   function onMapMouseMove(e) {
@@ -288,152 +368,41 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
   }
 
   function onMapLeftClick(e) {
-    clickEvent(e);
+    handleClickEvent(e);
 
-    if (currentInteractionMode === "dragging") {
-
-    }
-
-    else if (currentInteractionMode === 'lines') {
-      // On click, find the nearest RFF marker and draw a line to it
+    if (currentInteractionMode === "lines") {
       const nearbyRFFs = findAllRFFMarkersWithinRadius(e.latlng);
-      // console.log(`Found ${nearbyRFFs.length} RFFs within range`);
-
-      const newLines = [];
-      nearbyRFFs.forEach(rff => {
+      const newLines = nearbyRFFs.map(rff => {
         const bearing = getBearing(rff.latlng.lat, rff.latlng.lng, e.latlng.lat, e.latlng.lng);
-        // const endPoint = calculateEndPoint(rff.latlng, bearing, 32186.9); // 20 miles in meters
         const endPoint = calculateEndPoint(rff.latlng, bearing, 102186.9); // 20 miles in meters
-        newLines.push({ start: rff.latlng, end: endPoint });
+        return { start: rff.latlng, end: endPoint };
       });
-
       addLines(newLines);
-    }
-
-    else if (currentInteractionMode === 'circles') {
+    } else if (currentInteractionMode === 'circles') {
       addCircle(e.latlng, 200); // Replace 200 with the desired radius
-    }
-
-      // Markers
-    else if (currentInteractionMode === 'RFF'
-      || currentInteractionMode === 'Signal'
-      || currentInteractionMode === 'Boat') {
-        addMarker(e.latlng, currentInteractionMode, `${currentInteractionMode} Marker Description`);
+    } else if (currentInteractionMode === 'RFF' || currentInteractionMode === 'Signal' || currentInteractionMode === 'Boat') {
+      addMarker(e.latlng, currentInteractionMode, `${currentInteractionMode} Marker Description`);
+      if (currentInteractionMode === 'Signal') {
+        addSignalToDatabase(); // Call API when in Signal mode
       }
-
-    else if (currentInteractionMode === "area") {
+    } else if (currentInteractionMode === "area") {
       addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng);
     }
   }
 
-  function onMapRightClick(e) {
-    clickEvent(e);
-  }
-
-  useEffect(() => {
-    // Enable or disable map dragging based on the current interaction mode
-    if (currentInteractionMode === 'dragging') {
-      map.dragging.enable();
-    } else {
-      map.dragging.disable();
-    }
-  }, [currentInteractionMode, map]);
-
   useMapEvents({
-    mousemove: (e) => {
-      onMapMouseMove(e);
-    },
-    click(e) {
-      onMapLeftClick(e);
-    },
-    contextmenu(e) {
-      onMapRightClick(e);
-    },
+    mousemove: onMapMouseMove,
+    click: onMapLeftClick,
   });
 
   return null;
 }
 
-function Inspect() {
-  const {
-    click,
-    displayPopup,
-  } = useContext(MarkerContext);
-
-  const buttonStyle = "bg-gray-200 border border-gray-400 rounded-md w-fit h-fit px-1 py-px";
-  // For absolutely zero reason, leaflet assumes a z-index of 399.
-  // And the zoom buttons have a z-index of 999.
-  // We set to 1000 to get above all of that.
-  return (
-    <div
-      className="absolute flex justify-center items-center w-full h-full bg-black bg-opacity-30"
-      style={{ zIndex: 1000 }}
-    >
-      <div
-        className="flex flex-col justify-between bg-white p-10 w-1/3 h-1/2 rounded-md border shadow shadow-gray-600"
-      >
-        <div className="flex flex-col gap-2">
-          <div>
-            <label>Title:</label>
-            <input className="border rounded-md"/>
-          </div>
-          <div>
-            <label>Type:</label>
-            <select className={buttonStyle}>
-              <option></option>
-              <option>Sail Boat</option>
-              <option>Cruise Ship</option>
-              <option>Cargo Ship</option>
-              <option>Oil Freighter</option>
-            </select>
-          </div>
-          <div>
-            <label>Lat:</label>
-            <p>{click.mapLat}</p>
-          </div>
-          <div>
-            <label>Lng:</label>
-            <p>{click.mapLng}</p>
-          </div>
-          <label>Audio:</label>
-          <button className={buttonStyle}>Playback Audio</button>
-          <button className={buttonStyle}>Upload Audio</button>
-        </div>
-        <div className="flex w-full justify-center items-center">
-          <button
-            className={buttonStyle}
-            onClick={e => displayPopup(null)}>
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function MyMap({
-  currentInteractionMode,
-  visibility,
-  setCursorPosition,
-  addBookmark,
-  bookmarkPosition,
-  setBookmarkPosition,
-}) {
-  const mapRef = useRef(); // Create a ref for the map
+function MyMap({ currentInteractionMode, visibility, setCursorPosition, addBookmark, bookmarkPosition, setBookmarkPosition }) {
+  const mapRef = useRef();
 
   const {
-    markers,
-    lines,
-    circles,
-    deleteMarker,
-    clickedMarker,
-    updateClickedMarker,
-    click,
-    popup,
-    displayPopup,
-    areaFirstClick,
-    areaTmpLines,
-    areas,
+    markers, lines, circles, updateSignalInDatabase, deleteSignalInDatabase, setClickedMarker, clickedMarker, click, popup, setPopup, areaFirstClick, areaTmpLines, areas
   } = useContext(MarkerContext);
 
   const position = [37.17952, -122.36]; // Initial map position
@@ -441,135 +410,243 @@ function MyMap({
   const contextMenuData = [
     {
       name: "Inspect",
-      action: () => displayPopup("inspect"),
+      action: () => setPopup("inspect"),
     },
     {
-      name: "Add to bookmarks",
-      action: () => {
-        addBookmark(clickedMarker);
-        displayPopup(null);
-      },
+      name: "Edit",
+      action: () => setPopup("edit"), // Can be expanded to show an edit form
     },
     {
       name: "Delete",
       action: () => {
-        deleteMarker(clickedMarker.latlng);
-        updateClickedMarker(null);
-        displayPopup(null);
+        console.info(clickedMarker)
+        if (clickedMarker && clickedMarker.id) {  // <-- Ensure that `clickedMarker.id` exists
+          deleteSignalInDatabase(clickedMarker.id);
+          setClickedMarker(null);
+          setPopup(null);
+        }
       },
     },
   ];
 
-  // TODO move into MapInteractions
-  useEffect(() => {
-    // This effect will run when the mapRef is set (after the MapContainer has mounted)
-    if (mapRef.current) {
-      const mapInstance = mapRef.current;
-
-      const handleMouseMove = (event) => {
-        setCursorPosition(event.latlng);
-      };
-
-      // Listen for mouse move events
-      mapInstance.on('mousemove', handleMouseMove);
-
-      // Cleanup function to run when the component unmounts
-      return () => {
-        mapInstance.off('mousemove', handleMouseMove);
-      };
-    }
-  }, [setCursorPosition]);
-
-  // TODO move in MapInteractions
-  // If bookmark position is set, fly to that position
   useEffect(() => {
     if (bookmarkPosition && mapRef.current) {
       const mapInstance = mapRef.current;
       mapInstance.flyTo(bookmarkPosition, 9);
-
-      // Update the bookmark position state after flying to the location (thank you andy)
       setBookmarkPosition(null);
-
     }
   }, [bookmarkPosition]);
 
   return (
-    <>
-      <MapContainer
-        center={position}
-        zoom={8}
-        ref={mapRef}
-        style={{ height: "100vh", width: "100vw" }}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <MapInteractions
-          currentInteractionMode={currentInteractionMode}
-          setCursorPosition={setCursorPosition}
-        />
-        {markers.filter(marker => visibility[marker.type]).map((marker) => (
-            <CustomMarker
-                key={`${marker.type}-${marker.latlng.lat}-${marker.latlng.lng}`}
-                marker={marker}
-            />
-        ))}
-
-        {visibility.lines && lines.map((line) => (
-            <Polyline
-                key={`line-${line.start.lat}-${line.start.lng}-${line.end.lat}-${line.end.lng}`}
-                positions={[line.start, line.end]}
-                color="red"
-            />
-        ))}
-
-        {visibility.circles && circles.map((circle, index) => (
-          <Circle
-            key={`circle-${index}`}
-            center={circle.center}
-            radius={circle.radius}
-            fillColor="blue"
-          />
-        ))}
-
-        {
-          visibility.areas &&
-            areaFirstClick !== null &&
-            <CircleMarker
-              center={[areaFirstClick.mapLat, areaFirstClick.mapLng]}
-              pathOptions={{ color: 'yellow' }}
-              radius={7}
-            />
-        }
-        {
-          visibility.areas &&
-            areaTmpLines.map(line => (
+      <>
+        <MapContainer center={position} zoom={8} ref={mapRef} style={{ height: "100vh", width: "100vw" }}>
+          <TileLayer
+              attribution="<a href='http://www.esri.com/'>Esri</a>"
+              url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"/>
+          <MapInteractions currentInteractionMode={currentInteractionMode} setCursorPosition={setCursorPosition} />
+          {markers.filter(marker => visibility[marker.type]).map((marker, index) => (
+              <CustomMarker key={`${marker.type}-${marker.latlng.lat}-${marker.latlng.lng}-${index}`} marker={marker} />
+          ))}
+          {visibility.lines && lines.map((line, index) => (
               <Polyline
-                pathOptions={{ color: 'yellow' }}
-                positions={line}
+                  key={`line-${index}`}
+                  positions={[line.start, line.end]}
+                  color="red"
+                  eventHandlers={{
+                    contextmenu: () => {
+                      setClickedMarker(line);
+                      setPopup("contextmenu");
+                    }
+                  }}
               />
-            ))
-        }
-        {
-          visibility.areas &&
-            areas.map(area =>
-              <Polygon
-                pathOptions={{ color: 'yellow' }}
-                positions={area}
+          ))}
+          {visibility.circles && circles.map((circle, index) => (
+              <Circle key={`circle-${index}`} center={circle.center} radius={circle.radius} fillColor="blue" />
+          ))}
+          {visibility.areas && areaFirstClick !== null && (
+              <CircleMarker
+                  center={[areaFirstClick.mapLat, areaFirstClick.mapLng]}
+                  pathOptions={{ color: 'yellow' }}
+                  radius={7}
               />
-            )
-        }
-      </MapContainer>
-      {
-        popup === "inspect" ?
-          <Inspect/>
-          : popup === "contextmenu" && click !== null &&
-            <MarkerContextMenu
-              x={click.winX}
-              y={click.winY}
-              data={contextMenuData}
-            />
-      }
-    </>
+          )}
+          {visibility.areas && areaTmpLines.map((line, index) => (
+              <Polyline key={`tmpLine-${index}`} pathOptions={{ color: 'yellow' }} positions={line} />
+          ))}
+          {visibility.areas && areas.map((area, index) => (
+              <Polygon key={`area-${index}`} pathOptions={{ color: 'yellow' }} positions={area} />
+          ))}
+        </MapContainer>
+        {popup === "inspect" && click && (
+            <Inspect />
+        )}
+        {popup === "edit" && click && (
+            <EditForm marker={clickedMarker} setPopup={setPopup} updateSignalInDatabase={updateSignalInDatabase} />
+        )}
+        {popup === "contextmenu" && click && (
+            <MarkerContextMenu x={click.winX} y={click.winY} data={contextMenuData} />
+        )}
+      </>
   );
 }
 
-export { MyMap, MarkerProvider, MarkerContext, calculateEndPoint, getBearing };
+function Inspect() {
+  const { click, setPopup } = useContext(MarkerContext);
+  const buttonStyle = "bg-gray-200 border border-gray-400 rounded-md w-fit h-fit px-1 py-px";
+
+  return (
+      <div
+          className="absolute flex justify-center items-center w-full h-full bg-black bg-opacity-30"
+          style={{ zIndex: 1000 }}
+      >
+        <div className="flex flex-col justify-between bg-white p-10 w-1/3 h-1/2 rounded-md border shadow shadow-gray-600">
+          <div className="flex flex-col gap-2">
+            <div>
+              <label>Title:</label>
+              <input className="border rounded-md" />
+            </div>
+            <div>
+              <label>Type:</label>
+              <select className={buttonStyle}>
+                <option>Sail Boat</option>
+                <option>Cruise Ship</option>
+                <option>Cargo Ship</option>
+                <option>Oil Freighter</option>
+              </select>
+            </div>
+            <div>
+              <label>Lat:</label>
+              <p>{click.mapLat}</p>
+            </div>
+            <div>
+              <label>Lng:</label>
+              <p>{click.mapLng}</p>
+            </div>
+            <label>Audio:</label>
+            <button className={buttonStyle}>Playback Audio</button>
+            <button className={buttonStyle}>Upload Audio</button>
+          </div>
+          <div className="flex w-full justify-center items-center">
+            <button
+                className={buttonStyle}
+                onClick={() => setPopup(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+  );
+}
+
+const EditForm = ({ marker, updateSignalInDatabase, setPopup }) => {
+  const [formData, setFormData] = useState({
+    id : '',
+    channel: '',
+    starttime: '',
+    fix: '',
+    stoptime: '',
+    bearing1: '',
+    rff1: ''
+  });
+
+  useEffect(() => {
+    if (marker) {
+      setFormData({
+        id : marker.id,
+        channel: marker.channel,
+        starttime: marker.starttime,
+        stoptime: marker.stoptime || '',
+        fix: marker.fix,
+        bearing1: marker.bearing1,
+        rff1: marker.rff1
+      });
+    }
+  }, [marker]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const HandleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateSignalInDatabase(formData);
+      setPopup(null);  // Close the popup after saving
+    } catch (error) {
+      console.error('Error updating signal:', error);
+    }
+  };
+
+  return (
+      <div className="absolute flex justify-center items-center w-full h-full bg-black bg-opacity-30" style={{ zIndex: 1000 }}>
+        <div className="flex flex-col justify-between bg-white p-10 w-1/3 h-1/2 rounded-md border shadow shadow-gray-600">
+          <h3>Edit Signal Marker</h3>
+          <form onSubmit={HandleSubmit} className="flex flex-col gap-4">
+            <div>
+              <label>RFF: </label>
+              <p>{formData.id}</p>
+            </div>
+
+            <div>
+              <label>RFF: </label>
+              <p>{formData.rff1}</p>
+            </div>
+            <div>
+              <label>Bearing: </label>
+              <p>{formData.bearing1}</p>
+            </div>
+            <div>
+              <label>Start time: </label>
+              <p>{formData.starttime}</p>
+            </div>
+            <div>
+              <label>Fix: </label>
+              <p>{formData.fix}</p>
+            </div>
+
+            <div>
+              <label>Channel</label>
+              <input
+                  type="text"
+                  name="channel"
+                  value={formData.channel}
+                  onChange={handleInputChange}
+                  className="border rounded-md p-1"
+              />
+            </div>
+            <div>
+              <label>Stop Time</label>
+              <input
+                  type="text"
+                  name="stoptime"
+                  value={formData.stoptime}
+                  onChange={handleInputChange}
+                  className="border rounded-md p-1"
+              />
+            </div>
+
+            <div className="flex justify-between">
+              <button type="submit" className="bg-blue-500 text-white p-2 rounded-md">
+                Save Changes
+              </button>
+              <button
+                  type="button"
+                  className="bg-gray-500 text-white p-2 rounded-md"
+                  onClick={() => setPopup(null)}  // Close the popup on cancel
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+  );
+};
+
+
+export { MyMap, MarkerProvider, MarkerContext, calculateEndPoint };
