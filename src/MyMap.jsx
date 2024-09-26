@@ -13,10 +13,10 @@ import {
 } from "react-leaflet";
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { FaBroadcastTower} from "react-icons/fa";
+import { FaBroadcastTower } from "react-icons/fa";
 import { RiShip2Line } from "react-icons/ri";
 import 'leaflet/dist/leaflet.css';
-import {BsBroadcast} from "react-icons/bs";
+import { BsBroadcast } from "react-icons/bs";
 import MarkerContextMenu from "./MarkerContextMenu";
 
 
@@ -25,8 +25,8 @@ function createCustomIcon(icon) {
   const customMarkerHtml = renderToStaticMarkup(icon);
   return L.divIcon({
     html: customMarkerHtml,
-    iconAnchor: [0,0],
-    popupAnchor: [0,0],
+    iconAnchor: [0, 0],
+    popupAnchor: [0, 0],
     className: 'custom-icon'
   });
 }
@@ -101,7 +101,7 @@ function MarkerProvider({ children }) {
     }
     else {
       setAreaTmpLines([...areaTmpLines,
-        [[areaPrevClick.mapLat, areaPrevClick.mapLng], [lat, lng]]]);
+      [[areaPrevClick.mapLat, areaPrevClick.mapLng], [lat, lng]]]);
       setAreaPrevClick({
         winX: x,
         winY: y,
@@ -159,20 +159,20 @@ function MarkerProvider({ children }) {
   );
 }
 
-function CustomMarker({marker}) {
+function CustomMarker({ marker }) {
   let icon;
   switch (marker.type) {
-  case 'RFF':
-    icon = rffIcon;
-    break;
-  case 'Signal':
-    icon = signalIcon;
-    break;
-  case 'Boat':
-    icon = boatIcon;
-    break;
-  default:
-    icon = L.icon({ iconUrl: 'default-icon.png' }); // Default case
+    case 'RFF':
+      icon = rffIcon;
+      break;
+    case 'Signal':
+      icon = signalIcon;
+      break;
+    case 'Boat':
+      icon = boatIcon;
+      break;
+    default:
+      icon = L.icon({ iconUrl: 'default-icon.png' }); // Default case
   }
 
   const {
@@ -266,7 +266,7 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
 
     const y = Math.sin(destLng - startLng) * Math.cos(destLat);
     const x = Math.cos(startLat) * Math.sin(destLat) -
-        Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
+      Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
     const atan2 = Math.atan2(y, x);
     return (atan2 * 180 / Math.PI + 360) % 360; // in degrees
   }
@@ -304,12 +304,12 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
       addCircle(e.latlng, 200); // Replace 200 with the desired radius
     }
 
-      // Markers
+    // Markers
     else if (currentInteractionMode === 'RFF'
       || currentInteractionMode === 'Signal'
       || currentInteractionMode === 'Boat') {
-        addMarker(e.latlng, currentInteractionMode, `${currentInteractionMode} Marker Description`);
-      }
+      addMarker(e.latlng, currentInteractionMode, `${currentInteractionMode} Marker Description`);
+    }
 
     else if (currentInteractionMode === "area") {
       addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng);
@@ -365,7 +365,7 @@ function Inspect() {
         <div className="flex flex-col gap-2">
           <div>
             <label>Title:</label>
-            <input className="border rounded-md"/>
+            <input className="border rounded-md" />
           </div>
           <div>
             <label>Type:</label>
@@ -489,7 +489,9 @@ function MyMap({
         center={position}
         zoom={8}
         ref={mapRef}
-        style={{ height: "100vh", width: "100vw" }}
+        style={{ height: "100vh", width: "100vw", position: "absolute", z: "0" }}
+        attributionControl={false}
+        zoomControl={false}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <MapInteractions
@@ -497,18 +499,18 @@ function MyMap({
           setCursorPosition={setCursorPosition}
         />
         {markers.filter(marker => visibility[marker.type]).map((marker) => (
-            <CustomMarker
-                key={`${marker.type}-${marker.latlng.lat}-${marker.latlng.lng}`}
-                marker={marker}
-            />
+          <CustomMarker
+            key={`${marker.type}-${marker.latlng.lat}-${marker.latlng.lng}`}
+            marker={marker}
+          />
         ))}
 
         {visibility.lines && lines.map((line) => (
-            <Polyline
-                key={`line-${line.start.lat}-${line.start.lng}-${line.end.lat}-${line.end.lng}`}
-                positions={[line.start, line.end]}
-                color="red"
-            />
+          <Polyline
+            key={`line-${line.start.lat}-${line.start.lng}-${line.end.lat}-${line.end.lng}`}
+            positions={[line.start, line.end]}
+            color="red"
+          />
         ))}
 
         {visibility.circles && circles.map((circle, index) => (
@@ -522,41 +524,41 @@ function MyMap({
 
         {
           visibility.areas &&
-            areaFirstClick !== null &&
-            <CircleMarker
-              center={[areaFirstClick.mapLat, areaFirstClick.mapLng]}
+          areaFirstClick !== null &&
+          <CircleMarker
+            center={[areaFirstClick.mapLat, areaFirstClick.mapLng]}
+            pathOptions={{ color: 'yellow' }}
+            radius={7}
+          />
+        }
+        {
+          visibility.areas &&
+          areaTmpLines.map(line => (
+            <Polyline
               pathOptions={{ color: 'yellow' }}
-              radius={7}
+              positions={line}
             />
+          ))
         }
         {
           visibility.areas &&
-            areaTmpLines.map(line => (
-              <Polyline
-                pathOptions={{ color: 'yellow' }}
-                positions={line}
-              />
-            ))
-        }
-        {
-          visibility.areas &&
-            areas.map(area =>
-              <Polygon
-                pathOptions={{ color: 'yellow' }}
-                positions={area}
-              />
-            )
+          areas.map(area =>
+            <Polygon
+              pathOptions={{ color: 'yellow' }}
+              positions={area}
+            />
+          )
         }
       </MapContainer>
       {
         popup === "inspect" ?
-          <Inspect/>
+          <Inspect />
           : popup === "contextmenu" && click !== null &&
-            <MarkerContextMenu
-              x={click.winX}
-              y={click.winY}
-              data={contextMenuData}
-            />
+          <MarkerContextMenu
+            x={click.winX}
+            y={click.winY}
+            data={contextMenuData}
+          />
       }
     </>
   );

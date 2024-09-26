@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {MyMap, MarkerProvider} from './MyMap';
+import { MyMap, MarkerProvider } from './MyMap';
 import Button from '@mui/material/Button';
 import { BsBroadcast } from "react-icons/bs";
 import { RiShip2Line, RiDraggable, RiFilterFill, RiFilterOffLine } from "react-icons/ri";
@@ -31,7 +31,7 @@ function App() {
       <div>
         <div className="flex items-center gap-5 font-bold text-2xl p-1 mb-0 ml-5 underline">
           <div>Bookmarks</div>
-          <FaBookBookmark size={34}/>
+          <FaBookBookmark size={34} />
         </div>
         <div className="overflow-scroll h-80">
           {bookmarks.map((bookmark, index) => (
@@ -59,15 +59,15 @@ function App() {
 
   // Function to get the icon based on the type
   function getIcon(type) {
-    switch(type) {
-    case 'RFF':
-      return <FaBroadcastTower size={18} />;
-    case 'Signal':
-      return <BsBroadcast size={18} />;
-    case 'Boat':
-      return <RiShip2Line size={18} />;
-    default:
-      return null;
+    switch (type) {
+      case 'RFF':
+        return <FaBroadcastTower size={18} />;
+      case 'Signal':
+        return <BsBroadcast size={18} />;
+      case 'Boat':
+        return <RiShip2Line size={18} />;
+      default:
+        return null;
     }
   };
 
@@ -90,7 +90,7 @@ function App() {
     }));
   };
 
-  function ModeButton({mode, children}) {
+  function ModeButton({ mode, children }) {
     return (
       <Button
         variant="contained"
@@ -102,7 +102,7 @@ function App() {
     )
   };
 
-  function VisibilityButton({layer, children}) {
+  function VisibilityButton({ layer, children }) {
     return (
       <Button
         variant="outlined"
@@ -127,99 +127,49 @@ function App() {
   }
 
   return (
-    <div className="flex flex-row bg-gray-300">
-      <div className="flex flex-col w-96 h-full max-h-screen gap-2 py-4 px-4 bg-gray-300">
+    <>
+      <div classname="relative">
+        {/* Map Interface */}
+        <MarkerProvider>
+          <MyMap
+            currentInteractionMode={currentInteractionMode}
+            visibility={visibility}
+            setCursorPosition={setCursorPosition} // Pass this prop down to MyMap
+            addBookmark={addBookmark}  // Pass props to myMap
+            bookmarkPosition={bookmarkPosition}
+            setBookmarkPosition={setBookmarkPosition}
+          />
+        </MarkerProvider>
 
-        {/* Mode Buttons*/}
-        <ModeButton mode="dragging">
-          <RiDraggable /> Dragging
-        </ModeButton>
-
-        <ModeButton mode="RFF">
-          <FaBroadcastTower /> Add RFF Marker
-        </ModeButton>
-
-        <ModeButton mode="Signal">
-          <BsBroadcast /> Add Signal Marker
-        </ModeButton>
-
-        <ModeButton mode="Boat">
-          <RiShip2Line /> Add Boat Marker
-        </ModeButton>
-
-        <ModeButton mode="lines">
-          <TfiLayoutLineSolid /> Lines
-        </ModeButton>
-
-        <ModeButton mode="area">
-          <TfiLayoutLineSolid /> Area
-        </ModeButton>
-
-        <ModeButton mode="circles">
-          <TbChartCircles /> Circles
-        </ModeButton>
-
-        {/* Visibility Toggle Buttons */}
-        <VisibilityButton layer="RFF">
-          RFF Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="Signal">
-          Signal Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="Boat">
-          Boat Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="lines">
-          Lines Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="areas">
-          Areas Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="circles">
-          Circles Visibility
-        </VisibilityButton>
-
-        {/* Bookmark List */}
-        <BookmarkList bookmarks={bookmarks} />
-
-        <button className='bg-orange-500 p-3 rounded-lg'
-          onClick={testClick}>
-          Hello world
-        </button>
-      </div>
-      <MarkerProvider>
-        <MyMap
-          currentInteractionMode={currentInteractionMode}
-          visibility={visibility}
-          setCursorPosition={setCursorPosition} // Pass this prop down to MyMap
-          addBookmark={addBookmark}  // Pass props to myMap
-          bookmarkPosition={bookmarkPosition}
-          setBookmarkPosition={setBookmarkPosition}
-        />
-      </MarkerProvider>
-
-      <div
-        className={"absolute top-5 left-1/2 bg-black bg-opacity-75 text-white font-bold"
-          + " shadow shadow-gray-600 text-xl px-4 py-2 rounded-lg text-center"}
-        style={{
-          zIndex: 1000, // Above map elements
-        }}
-      >
-        <div className="flex justify-between">
-          <p>Lat:</p>
-          <p>{cursorPosition.lat.toFixed(5)}</p>
+        {/*UI Overlay*/}
+        <div
+          className={"absolute top-0 left-0 bg-black bg-opacity-80 text-white font-bold w-screen h-[5vh]"
+            + " shadow shadow-gray-600 text-xl px-4 py-2 text-center"}
+          style={{ zIndex: 1000, /*Above map elements*/ }}
+        >
+          <img src="http://via.placeholder.com/32x20/000000/ffffff?text=?" height="20" width="32" />
         </div>
-        <div className="flex justify-between">
-          <p>Lon:</p>
-          <p>{cursorPosition.lng.toFixed(5)}</p>
+
+        <div
+          className={"absolute bottom-0 left-0 bg-black bg-opacity-100 text-white font-bold w-screen h-[3vh]"
+            + " shadow shadow-gray-600 text-xl px-4 py-2 text-center"}
+          style={{ zIndex: 1000, /*Above map elements*/ }}
+        >
         </div>
+
+
       </div>
-    </div>
+
+
+    </>
+    // <div className="flex flex-row bg-gray-300">
+    //   <div className="flex flex-col w-5vw h-full max-h-screen gap-2 py-4 px-4 bg-gray-300">
+
+
+    //   </div>
+
+
+    // </div >
   );
 }
 
