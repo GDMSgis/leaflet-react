@@ -25,7 +25,7 @@ function createCustomIcon(icon) {
   const customMarkerHtml = renderToStaticMarkup(icon);
   return L.divIcon({
     html: customMarkerHtml,
-    iconAnchor: [0,0],
+    iconAnchor: [12,12],
     popupAnchor: [0,0],
     className: 'custom-icon'
   });
