@@ -501,7 +501,10 @@ function MyMap({
         ref={mapRef}
         style={{ height: "100vh", width: "100vw" }}
       >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {/*<TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />*/}
+        <TileLayer
+          attribution="<a href='http://www.esri.com/'>Esri</a>"
+          url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"/>
         <MapInteractions
           currentInteractionMode={currentInteractionMode}
           setCursorPosition={setCursorPosition}
