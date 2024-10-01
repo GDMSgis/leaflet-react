@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { MyMap, MarkerContext, calculateEndPoint } from './MyMap';
+import Drawer from './Minivariantdrawer';
 import Button from '@mui/material/Button';
 import { BsBroadcast } from "react-icons/bs";
 import { RiShip2Line, RiDraggable, RiFilterFill, RiFilterOffLine } from "react-icons/ri";
@@ -162,70 +163,7 @@ function App() {
 
   return (
     <div className="flex flex-row bg-gray-300">
-      <div className="flex flex-col w-96 h-full max-h-screen gap-2 py-4 px-4 bg-gray-300">
-
-        {/* Mode Buttons*/}
-        <ModeButton mode="dragging">
-          <RiDraggable /> Dragging
-        </ModeButton>
-
-        <ModeButton mode="RFF">
-          <FaBroadcastTower /> Add RFF Marker
-        </ModeButton>
-
-        <ModeButton mode="Signal">
-          <BsBroadcast /> Add Signal Marker
-        </ModeButton>
-
-        <ModeButton mode="Boat">
-          <RiShip2Line /> Add Boat Marker
-        </ModeButton>
-
-        <ModeButton mode="lines">
-          <TfiLayoutLineSolid /> Lines
-        </ModeButton>
-
-        <ModeButton mode="area">
-          <TfiLayoutLineSolid /> Area
-        </ModeButton>
-
-        <ModeButton mode="circles">
-          <TbChartCircles /> Circles
-        </ModeButton>
-
-        {/* Visibility Toggle Buttons */}
-        <VisibilityButton layer="RFF">
-          RFF Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="Signal">
-          Signal Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="Boat">
-          Boat Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="lines">
-          Lines Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="areas">
-          Areas Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="circles">
-          Circles Visibility
-        </VisibilityButton>
-
-        {/* Bookmark List */}
-        <BookmarkList bookmarks={bookmarks} />
-
-        <button className='bg-orange-500 p-3 rounded-lg'
-          onClick={displayAllCallers}>
-          Display All Callers
-        </button>
-      </div>
+      <Drawer></Drawer>
       <MyMap
         currentInteractionMode={currentInteractionMode}
         visibility={visibility}
