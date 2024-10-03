@@ -37,7 +37,7 @@ function App() {
       <div>
         <div className="flex items-center gap-5 font-bold text-2xl p-1 mb-0 ml-5 underline">
           <div>Bookmarks</div>
-          <FaBookBookmark size={34}/>
+          <FaBookBookmark size={34} />
         </div>
         <div className="overflow-scroll h-80">
           {bookmarks.map((bookmark, index) => (
@@ -65,15 +65,15 @@ function App() {
 
   // Function to get the icon based on the type
   function getIcon(type) {
-    switch(type) {
-    case 'RFF':
-      return <FaBroadcastTower size={18} />;
-    case 'Signal':
-      return <BsBroadcast size={18} />;
-    case 'Boat':
-      return <RiShip2Line size={18} />;
-    default:
-      return null;
+    switch (type) {
+      case 'RFF':
+        return <FaBroadcastTower size={18} />;
+      case 'Signal':
+        return <BsBroadcast size={18} />;
+      case 'Boat':
+        return <RiShip2Line size={18} />;
+      default:
+        return null;
     }
   };
 
@@ -96,7 +96,7 @@ function App() {
     }));
   };
 
-  function ModeButton({mode, children}) {
+  function ModeButton({ mode, children }) {
     return (
       <Button
         variant="contained"
@@ -108,7 +108,7 @@ function App() {
     )
   };
 
-  function VisibilityButton({layer, children}) {
+  function VisibilityButton({ layer, children }) {
     return (
       <Button
         variant="outlined"
@@ -145,7 +145,7 @@ function App() {
 
   async function displayAllCallers() {
     const latlngOfRffs = markers.filter(x => x.type === "RFF")
-      .reduce((acc, cur) => ({...acc, [cur.name]: cur.latlng}), {});
+      .reduce((acc, cur) => ({ ...acc, [cur.name]: cur.latlng }), {});
     console.log(calculateEndPoint(latlngOfRffs['San Francisco'], 250, 100000));
     // fetch('http://localhost:8000/caller/')
     //   .then((response) => {
@@ -160,72 +160,34 @@ function App() {
     //   });
   }
 
+  function decimalToDegrees(lat, long) {
+    let latDirection = "N";
+    let longDirection = "E";
+    if (lat < 0) {
+      latDirection = "S";
+      lat *= -1;
+    }
+    if (long < 0) {
+      longDirection = "W";
+      long *= -1;
+    }
+
+
+    const latdeg = Math.trunc(lat);
+    const latmin = Math.trunc((lat - latdeg) * 60);
+    const latsec = Math.trunc(((lat - latdeg) * 60 - latmin) * 60);
+
+    const longdeg = Math.trunc(long);
+    const longmin = Math.trunc((long - longdeg) * 60);
+    const longsec = Math.trunc(((long - longdeg) * 60 - longmin) * 60);
+
+    const latString = `${latdeg}\u00B0 ${latmin < 10 ? `0${latmin}` : latmin}' ${latsec < 10 ? `0${latsec}` : latsec}"${latDirection}`;
+    const longString = `${longdeg}\u00B0 ${longmin < 10 ? `0${longmin}` : longmin}' ${longsec < 10 ? `0${longsec}` : longsec}"${longDirection}`;
+
+    return `${latString} ${longString}`;
+  }
   return (
-    <div className="flex flex-row bg-gray-300">
-      <div className="flex flex-col w-96 h-full max-h-screen gap-2 py-4 px-4 bg-gray-300">
-
-        {/* Mode Buttons*/}
-        <ModeButton mode="dragging">
-          <RiDraggable /> Dragging
-        </ModeButton>
-
-        <ModeButton mode="RFF">
-          <FaBroadcastTower /> Add RFF Marker
-        </ModeButton>
-
-        <ModeButton mode="Signal">
-          <BsBroadcast /> Add Signal Marker
-        </ModeButton>
-
-        <ModeButton mode="Boat">
-          <RiShip2Line /> Add Boat Marker
-        </ModeButton>
-
-        <ModeButton mode="lines">
-          <TfiLayoutLineSolid /> Lines
-        </ModeButton>
-
-        <ModeButton mode="area">
-          <TfiLayoutLineSolid /> Area
-        </ModeButton>
-
-        <ModeButton mode="circles">
-          <TbChartCircles /> Circles
-        </ModeButton>
-
-        {/* Visibility Toggle Buttons */}
-        <VisibilityButton layer="RFF">
-          RFF Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="Signal">
-          Signal Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="Boat">
-          Boat Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="lines">
-          Lines Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="areas">
-          Areas Visibility
-        </VisibilityButton>
-
-        <VisibilityButton layer="circles">
-          Circles Visibility
-        </VisibilityButton>
-
-        {/* Bookmark List */}
-        <BookmarkList bookmarks={bookmarks} />
-
-        <button className='bg-orange-500 p-3 rounded-lg'
-          onClick={displayAllCallers}>
-          Display All Callers
-        </button>
-      </div>
+    <>
       <MyMap
         currentInteractionMode={currentInteractionMode}
         visibility={visibility}
@@ -235,23 +197,32 @@ function App() {
         setBookmarkPosition={setBookmarkPosition}
       />
 
+
+
       <div
-        className={"absolute top-5 left-1/2 bg-black bg-opacity-75 text-white font-bold"
-          + " shadow shadow-gray-600 text-xl px-4 py-2 rounded-lg text-center"}
-        style={{
-          zIndex: 1000, // Above map elements
-        }}
+        className={"absolute bottom-0 left-0 bg-gray-300 bg-opacity-100 text-white font-bold w-[100vw] h-[3.5vh]"
+          + " shadow shadow-gray-600 text-xl text-center"}
+        style={{ zIndex: 1000, /*Above map elements*/ }}
       >
-        <div className="flex justify-between">
-          <p>Lat:</p>
-          <p>{cursorPosition.lat.toFixed(5)}</p>
+        {/*Attributions*/}
+        <div className="flex flex-row justify-between px-3">
+          <div className={"flex flex-row"}>
+            <div className="flex flex-row">
+              <a className="hover:underline text-black" href="https://leafletjs.com/">Leaflet</a>
+              <p className="text-black">&nbsp;|&nbsp;</p>
+              <a className="hover:underline text-black" href="www.esri.com">Esri</a>
+            </div>
+          </div>
+          {/*Lat-Long*/}
+          <div className={"flex flex-row"}>
+            <p className="text-black">{decimalToDegrees(cursorPosition.lat, cursorPosition.lng)}</p>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <p>Lon:</p>
-          <p>{cursorPosition.lng.toFixed(5)}</p>
-        </div>
+
       </div>
-    </div>
+
+    </>
+
   );
 }
 
