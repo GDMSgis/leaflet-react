@@ -9,13 +9,16 @@ import { TfiLayoutLineSolid } from "react-icons/tfi";
 import { FaBookBookmark } from "react-icons/fa6";
 
 function App() {
+  const { handleReplayClick } = useContext(MarkerContext); // Use useContext inside the functional component body
   // Declare array to store bookmarks
   const [bookmarks, setBookmarks] = useState([]);
   // Declare state to store bookmark position
   const [bookmarkPosition, setBookmarkPosition] = useState(null);
-
+  // Declare state for cursor position
   const [cursorPosition, setCursorPosition] = useState({ lat: 0, lng: 0 });
+  // Declare state for current interaction mode
   const [currentInteractionMode, setCurrentInteractionMode] = useState('dragging');
+  // Declare state for layer visibility
   const [visibility, setVisibility] = useState({
     RFF: true,
     Signal: true,
@@ -24,6 +27,8 @@ function App() {
     circles: true,
     areas: true,
   });
+  // Declare state for decay rate
+  const [decayRate, setDecayRate] = useState(30000); // Default decay rate in milliseconds
 
   // Bookmark List component
   function BookmarkList({ bookmarks }) {
@@ -112,6 +117,8 @@ function App() {
     );
   }
 
+  // Function to handle replay button click
+
   return (
       <div className="flex flex-row bg-gray-300">
         <div className="flex flex-col w-96 h-full max-h-screen gap-2 py-4 px-4 bg-gray-300">
@@ -128,21 +135,9 @@ function App() {
             <BsBroadcast /> Add Signal Marker
           </ModeButton>
 
-          {/*<ModeButton mode="Boat">*/}
-          {/*  <RiShip2Line /> Add Boat Marker*/}
-          {/*</ModeButton>*/}
-
-          {/*<ModeButton mode="lines">*/}
-          {/*  <TfiLayoutLineSolid /> Lines*/}
-          {/*</ModeButton>*/}
-
           <ModeButton mode="area">
             <TfiLayoutLineSolid /> Area
           </ModeButton>
-
-          {/*<ModeButton mode="circles">*/}
-          {/*  <TbChartCircles /> Circles*/}
-          {/*</ModeButton>*/}
 
           {/* Visibility Toggle Buttons */}
           <VisibilityButton layer="RFF">
@@ -169,6 +164,28 @@ function App() {
             Circles Visibility
           </VisibilityButton>
 
+          {/* Decay Rate Input */}
+          <div className="my-4">
+            <label className="block font-bold mb-2">Set Decay Rate (ms):</label>
+            <input
+                type="number"
+                value={decayRate}
+                onChange={(e) => setDecayRate(parseInt(e.target.value, 10))}
+                className="border rounded p-2 w-full"
+                min="1000"
+            />
+          </div>
+
+          {/* Replay Button */}
+          <Button
+              variant="contained"
+              color="primary"
+              onClick={handleReplayClick}
+              className="mb-4"
+          >
+            Replay All Lines
+          </Button>
+
           {/* Bookmark List */}
           <BookmarkList bookmarks={bookmarks} />
         </div>
@@ -180,6 +197,7 @@ function App() {
             addBookmark={addBookmark}
             bookmarkPosition={bookmarkPosition}
             setBookmarkPosition={setBookmarkPosition}
+            decayRate={decayRate} // Pass decay rate to MyMap
         />
 
         <div

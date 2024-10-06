@@ -19,6 +19,8 @@ import 'leaflet/dist/leaflet.css';
 import { BsBroadcast } from "react-icons/bs";
 import MarkerContextMenu from "./MarkerContextMenu";
 
+let decayRateGlobal = 0; // Initialize the global decay rate
+
 // Custom icon creation function
 function createCustomIcon(icon) {
   const customMarkerHtml = renderToStaticMarkup(icon);
@@ -92,7 +94,10 @@ function MarkerProvider({ children }) {
   const [clickedMarker, setClickedMarker] = useState(null);
   const [popup, setPopup] = useState(null);
 
-  // Fetch markers/signals from MongoDB
+  // Add this state to track replay button usage
+  const [replay, setReplay] = useState(false);
+
+  // Modify useEffect to fetch only recent markers if not in replay mode
   useEffect(() => {
     const intervalId = setInterval(async () => {
       try {
@@ -100,15 +105,34 @@ function MarkerProvider({ children }) {
         const result = await response.json();
 
         if (result.data && result.data.length) {
-          setLines([]); // Clear existing lines
-          result.data[0].forEach(caller => {
+          const currentTime = new Date().getTime();
+          // Filter the fetched records
+          const recentData = result.data[0].filter(caller => {
+            const callTime = new Date(caller.starttime).getTime();
+            return replay ? true : callTime >= (currentTime - decayRateGlobal); // Adjust the decayRate usage
+          });
+
+          const newLines = recentData.map(caller => {
             const startLatLng = markers.find(marker => marker.name === caller.rff1)?.latlng;
             if (startLatLng) {
               const endLatLng = calculateEndPoint(startLatLng, Number(caller.bearing1), 160934.4);
-              // Add caller data to the line object for future reference
-              addLines([{ start: startLatLng, end: endLatLng, id: caller.id, channel: caller.channel, bearing1: caller.bearing1, rff1: caller.rff1, starttime: caller.starttime, stoptime: caller.stoptime, fix: caller.fix}]);
+              return {
+                start: startLatLng,
+                end: endLatLng,
+                id: caller.id,
+                channel: caller.channel,
+                bearing1: caller.bearing1,
+                rff1: caller.rff1,
+                starttime: caller.starttime,
+                stoptime: caller.stoptime,
+                fix: caller.fix,
+                timestamp: new Date(caller.starttime).getTime()  // Use the timestamp from the caller record
+              };
             }
-          });
+            return null;
+          }).filter(line => line !== null);
+
+          addLines(newLines);
         }
       } catch (error) {
         console.error('Error fetching signals from MongoDB:', error);
@@ -116,12 +140,77 @@ function MarkerProvider({ children }) {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [markers]);
+  }, [markers, replay, decayRateGlobal]);
+
+  // Function to handle replay button click
+  function handleReplayClick() {
+    setReplay(true);
+
+    // Fetch all records for replay
+    fetch('http://localhost:8000/caller/')
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.data && result.data.length) {
+            const allRecords = result.data[0];
+            let index = 0;
+
+            // Function to replay each record one by one
+            const replayRecord = () => {
+              if (index >= allRecords.length) {
+                // End replay mode after all records are processed
+                setReplay(false);
+                return;
+              }
+
+              const caller = allRecords[index];
+              const startLatLng = markers.find(marker => marker.name === caller.rff1)?.latlng;
+
+              if (startLatLng) {
+                const endLatLng = calculateEndPoint(startLatLng, Number(caller.bearing1), 160934.4);
+                const newLine = {
+                  start: startLatLng,
+                  end: endLatLng,
+                  id: `${caller.id}-replay`, // Unique ID for replay
+                  timestamp: new Date(caller.starttime).getTime(), // Use timestamp from the caller record
+                };
+
+                // Add line to the map
+                addLines([newLine]);
+
+                // Remove the line after the decay rate time
+                setTimeout(() => {
+                  setLines(prevLines => prevLines.filter(line => line.id !== newLine.id));
+                }, decayRateGlobal);
+
+                // Move to the next record after adding the current line
+                setTimeout(() => {
+                  index++;
+                  replayRecord();
+                }, decayRateGlobal);
+              } else {
+                // Move to the next record if no valid start point
+                index++;
+                replayRecord();
+              }
+            };
+
+            // Start replaying records one by one
+            replayRecord();
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching records for replay:', error);
+          setReplay(false);
+        });
+  }
+
+
 
   // Function to add a marker, determine the nearest RFF and calculate bearing
   function addMarker(latlng, type, description, audioFile = null, pingTime = null, id = null) {
     const pt = pingTime ?? new Date().toISOString();
-    const newMarker = { latlng, type, description, audioFile, pingTime: pt, id };
+    const newMarkerId = id ?? `${type}-${Date.now()}`; // Generate a unique ID if not provided
+    const newMarker = { latlng, type, description, audioFile, pingTime: pt, id: newMarkerId };
 
     // Check if the marker being added is of type 'Signal'
     if (type === 'Signal') {
@@ -130,6 +219,18 @@ function MarkerProvider({ children }) {
         const bearing = getBearing(nearestRFF.latlng.lat, nearestRFF.latlng.lng, latlng.lat, latlng.lng);
         newMarker.bearing1 = bearing;  // Set the bearing
         newMarker.rff1 = nearestRFF.name; // Set the nearest RFF name
+
+        // Create a line associated with this marker
+        const endLatLng = calculateEndPoint(nearestRFF.latlng, Number(bearing), 160934.4);
+        const newLine = {
+          start: nearestRFF.latlng,
+          end: endLatLng,
+          id: `${newMarkerId}-line`, // Associate line ID with marker ID
+          signalMarkerId: newMarkerId, // Link line to signal marker
+          timestamp: new Date().getTime() // Add a timestamp for decay
+        };
+
+        addLines([newLine]);
       }
     }
 
@@ -137,9 +238,10 @@ function MarkerProvider({ children }) {
 
     // Send to the database if it's a Signal marker
     if (newMarker.rff1 && newMarker.bearing1) {
-      addSignalToDatabase(newMarker.rff1, newMarker.bearing1);  // Call the database function
+      addSignalToDatabase(newMarker.rff1, newMarker.bearing1);
     }
   }
+
 
 // Function to find the nearest RFF marker
   function findNearestRFF(latlng) {
@@ -226,7 +328,11 @@ function MarkerProvider({ children }) {
 
 
   function addLines(newLines) {
-    setLines(prevLines => [...prevLines, ...newLines]);
+    setLines(prevLines => {
+      const existingLineIds = new Set(prevLines.map(line => line.id));
+      const filteredNewLines = newLines.filter(line => !existingLineIds.has(line.id));
+      return [...prevLines, ...filteredNewLines];
+    });
     handleLineIntersection(); // Check for intersections after adding new lines
   }
 
@@ -284,6 +390,7 @@ function MarkerProvider({ children }) {
           value={{
             markers,
             addMarker,
+            setMarkers,
             addSignalToDatabase,
             updateSignalInDatabase,
             deleteSignalInDatabase,
@@ -300,7 +407,9 @@ function MarkerProvider({ children }) {
             popup,
             setClickedMarker,
             setPopup,
+            setLines,
             handleClickEvent, // Provide click handler
+            handleReplayClick // Provide replay click handler
           }}
       >
         {children}
@@ -375,7 +484,9 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
       const newLines = nearbyRFFs.map(rff => {
         const bearing = getBearing(rff.latlng.lat, rff.latlng.lng, e.latlng.lat, e.latlng.lng);
         const endPoint = calculateEndPoint(rff.latlng, bearing, 102186.9); // 20 miles in meters
-        return { start: rff.latlng, end: endPoint };
+        return {
+          start: rff.latlng, end: endPoint, timestamp: new Date().getTime() // Add a timestamp for decay
+        };
       });
       addLines(newLines);
     } else if (currentInteractionMode === 'circles') {
@@ -398,12 +509,28 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
   return null;
 }
 
-function MyMap({ currentInteractionMode, visibility, setCursorPosition, addBookmark, bookmarkPosition, setBookmarkPosition }) {
+function MyMap({ currentInteractionMode, visibility, setCursorPosition, addBookmark, bookmarkPosition, setBookmarkPosition, decayRate}) {
   const mapRef = useRef();
-
+  decayRateGlobal = decayRate; // Update the global variable whenever `decayRate` changes
   const {
-    markers, lines, circles, updateSignalInDatabase, deleteSignalInDatabase, setClickedMarker, clickedMarker, click, popup, setPopup, areaFirstClick, areaTmpLines, areas
+    markers,
+    setMarkers, // Add setMarkers to destructure here
+    lines,
+    setLines,
+    circles,
+    updateSignalInDatabase,
+    deleteSignalInDatabase,
+    setClickedMarker,
+    clickedMarker,
+    click,
+    popup,
+    setPopup,
+    areaFirstClick,
+    areaTmpLines,
+    areas,
+    addLines
   } = useContext(MarkerContext);
+
 
   const position = [37.17952, -122.36]; // Initial map position
 
@@ -436,6 +563,35 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, addBookm
       setBookmarkPosition(null);
     }
   }, [bookmarkPosition]);
+
+
+  useEffect(() => {
+    if (decayRate > 0) {
+      const intervalId = setInterval(() => {
+        const currentTime = new Date().getTime();
+
+        setLines(prevLines => {
+          // Filter out lines that are older than the decay rate
+          return prevLines.filter(line => currentTime - line.timestamp <= decayRate);
+        });
+
+        setMarkers(prevMarkers => {
+          // Filter out Signal markers that are older than the decay rate
+          return prevMarkers.filter(marker => {
+            // Only apply decay to markers of type 'Signal'
+            if (marker.type === 'Signal') {
+              const markerAge = currentTime - new Date(marker.pingTime).getTime();
+              return markerAge <= decayRate; // Keep Signal markers within the decay rate
+            }
+            // Keep all other types of markers
+            return true;
+          });
+        });
+      }, 1000); // Check every second
+
+      return () => clearInterval(intervalId);
+    }
+  }, [decayRate, setLines, setMarkers]);
 
   return (
       <>
