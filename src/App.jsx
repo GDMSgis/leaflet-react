@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { MyMap, MarkerContext, calculateEndPoint } from './MyMap';
+import Drawer from './Minivariantdrawer';
 import Button from '@mui/material/Button';
 import { BsBroadcast } from "react-icons/bs";
 import { RiShip2Line, RiDraggable, RiFilterFill, RiFilterOffLine } from "react-icons/ri";
@@ -187,7 +188,8 @@ function App() {
     return `${latString} ${longString}`;
   }
   return (
-    <>
+    <div className="flex flex-row bg-gray-300">
+      <Drawer></Drawer>
       <MyMap
         currentInteractionMode={currentInteractionMode}
         visibility={visibility}
