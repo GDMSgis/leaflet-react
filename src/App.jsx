@@ -188,8 +188,7 @@ function App() {
     return `${latString} ${longString}`;
   }
   return (
-    <div className="flex flex-row bg-gray-300">
-      <Drawer></Drawer>
+    <>
       <MyMap
         currentInteractionMode={currentInteractionMode}
         visibility={visibility}
@@ -200,9 +199,10 @@ function App() {
       />
 
 
+      <Drawer></Drawer>
 
       <div
-        className={"absolute bottom-0 left-0 bg-gray-300 bg-opacity-100 text-white font-bold w-[100vw] h-[3.5vh]"
+        className={"absolute bottom-0 right-0 bg-gray-300 bg-opacity-100 text-white font-bold  w-3/12 h-[3.5vh]"
           + " shadow shadow-gray-600 text-xl text-center"}
         style={{ zIndex: 1000, /*Above map elements*/ }}
       >
@@ -222,9 +222,7 @@ function App() {
         </div>
 
       </div>
-
     </>
-
   );
 }
 

@@ -76,7 +76,7 @@ export default function MiniDrawer() {
   };
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}> {/* Ensure full height */}
+    <Box sx={{ display: 'flex', height: '100vh', zIndex: 1000 }}> {/* Ensure full height */}
       <CssBaseline />
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
