@@ -17,6 +17,8 @@ import { BsBroadcast } from 'react-icons/bs';
 import { FaMapMarkedAlt } from 'react-icons/fa';
 import { useContext } from 'react';
 import { AppContext } from './App'; 
+import { FaArrowsAlt } from 'react-icons/fa';
+import { RiFilterOffLine } from 'react-icons/ri';
 
 const drawerWidth = 240;
 
@@ -78,7 +80,7 @@ export default function MiniDrawer() {
     setOpen(false);
   };
 
-  const { handleInteractionModeChange } = useContext(AppContext); // Use the context to get the function
+  const { handleInteractionModeChange, toggleVisibility, visibility } = useContext(AppContext); // Use the context to get the function
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', zIndex: 1000 }}> {/* Ensure full height */}
@@ -192,6 +194,54 @@ export default function MiniDrawer() {
               </ListItemIcon>
               <ListItemText
                 primary="AOR"
+                sx={{ opacity: open ? 1 : 0 }}
+              />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding sx={{ display: 'block' }}>
+            <ListItemButton
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? 'initial' : 'center',
+                px: 2.5,
+              }}
+              onClick={() => handleInteractionModeChange('dragging')} // Set interaction mode to "dragging"
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 3 : 'auto',
+                  justifyContent: 'center',
+                }}
+              >
+                <FaArrowsAlt /> {/* Icon for dragging */}
+              </ListItemIcon>
+              <ListItemText
+                primary="Dragging"
+                sx={{ opacity: open ? 1 : 0 }}
+              />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding sx={{ display: 'block' }}>
+            <ListItemButton
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? 'initial' : 'center',
+                px: 2.5,
+              }}
+              onClick={() => toggleVisibility('areas')} // Toggle visibility of AORs
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 3 : 'auto',
+                  justifyContent: 'center',
+                }}
+              >
+                <RiFilterOffLine />
+              </ListItemIcon>
+              <ListItemText
+                primary={`AOR Visibility (${visibility.areas ? 'On' : 'Off'})`}
                 sx={{ opacity: open ? 1 : 0 }}
               />
             </ListItemButton>

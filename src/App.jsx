@@ -38,6 +38,13 @@ function App() {
     setCurrentInteractionMode(mode);
   };
 
+  function toggleVisibility(type) {
+    setVisibility(prevVisibility => ({
+      ...prevVisibility,
+      [type]: !prevVisibility[type]
+    }));
+  };
+
   // Bookmark List component
   function BookmarkList({ bookmarks }) {
     return (
@@ -91,13 +98,6 @@ function App() {
       const newBookmarks = [...prevBookmarks, marker];
       return newBookmarks;
     });
-  };
-
-  function toggleVisibility(type) {
-    setVisibility(prevVisibility => ({
-      ...prevVisibility,
-      [type]: !prevVisibility[type]
-    }));
   };
 
   function ModeButton({ mode, children }) {
@@ -192,7 +192,7 @@ function App() {
   }
   return (
     <>
-    <AppContext.Provider value={{ handleInteractionModeChange }}>
+    <AppContext.Provider value={{ handleInteractionModeChange, toggleVisibility, visibility }}>
       <MyMap
         currentInteractionMode={currentInteractionMode}
         visibility={visibility}
