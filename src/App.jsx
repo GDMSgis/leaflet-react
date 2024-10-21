@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, createContext } from 'react';
 import { MyMap, MarkerContext, calculateEndPoint } from './MyMap';
 import Drawer from './Minivariantdrawer';
 import Button from '@mui/material/Button';
@@ -8,6 +8,9 @@ import { FaBroadcastTower } from "react-icons/fa";
 import { TbChartCircles } from "react-icons/tb";
 import { TfiLayoutLineSolid } from "react-icons/tfi";
 import { FaBookBookmark } from "react-icons/fa6";
+import { FaMapMarkedAlt } from "react-icons/fa";
+
+export const AppContext = createContext();
 
 function App() {
   // Declare array to store bookmarks
@@ -31,10 +34,14 @@ function App() {
     markers,
   } = useContext(MarkerContext);
 
+  function handleInteractionModeChange(mode) {
+    setCurrentInteractionMode(mode);
+  };
 
   // Bookmark List component
   function BookmarkList({ bookmarks }) {
     return (
+      
       <div>
         <div className="flex items-center gap-5 font-bold text-2xl p-1 mb-0 ml-5 underline">
           <div>Bookmarks</div>
@@ -84,10 +91,6 @@ function App() {
       const newBookmarks = [...prevBookmarks, marker];
       return newBookmarks;
     });
-  };
-
-  function handleInteractionModeChange(mode) {
-    setCurrentInteractionMode(mode);
   };
 
   function toggleVisibility(type) {
@@ -189,6 +192,7 @@ function App() {
   }
   return (
     <>
+    <AppContext.Provider value={{ handleInteractionModeChange }}>
       <MyMap
         currentInteractionMode={currentInteractionMode}
         visibility={visibility}
@@ -220,8 +224,8 @@ function App() {
             <p className="text-black">{decimalToDegrees(cursorPosition.lat, cursorPosition.lng)}</p>
           </div>
         </div>
-
       </div>
+      </AppContext.Provider>
     </>
   );
 }

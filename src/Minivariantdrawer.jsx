@@ -14,6 +14,9 @@ import ListItemText from '@mui/material/ListItemText';
 import { FaBroadcastTower } from 'react-icons/fa';
 import { RiShip2Line } from 'react-icons/ri';
 import { BsBroadcast } from 'react-icons/bs';
+import { FaMapMarkedAlt } from 'react-icons/fa';
+import { useContext } from 'react';
+import { AppContext } from './App'; 
 
 const drawerWidth = 240;
 
@@ -74,6 +77,8 @@ export default function MiniDrawer() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
+
+  const { handleInteractionModeChange } = useContext(AppContext); // Use the context to get the function
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', zIndex: 1000 }}> {/* Ensure full height */}
@@ -163,6 +168,30 @@ export default function MiniDrawer() {
               </ListItemIcon>
               <ListItemText
                 primary="Signal"
+                sx={{ opacity: open ? 1 : 0 }}
+              />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding sx={{ display: 'block' }}>
+            <ListItemButton
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? 'initial' : 'center',
+                px: 2.5,
+              }}
+              onClick={() => handleInteractionModeChange('area')} // Set interaction mode to "area"
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 3 : 'auto',
+                  justifyContent: 'center',
+                }}
+              >
+                <FaMapMarkedAlt /> {/* Icon for AOR */}
+              </ListItemIcon>
+              <ListItemText
+                primary="AOR"
                 sx={{ opacity: open ? 1 : 0 }}
               />
             </ListItemButton>

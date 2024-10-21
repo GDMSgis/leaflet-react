@@ -22,6 +22,7 @@ import { BsBroadcast } from "react-icons/bs";
 import MarkerContextMenu from "./MarkerContextMenu";
 
 
+
 // Custom icon creation function
 function createCustomIcon(icon) {
   const customMarkerHtml = renderToStaticMarkup(icon);
