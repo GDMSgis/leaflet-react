@@ -20,6 +20,7 @@ import { RiShip2Line } from "react-icons/ri";
 import 'leaflet/dist/leaflet.css';
 import { BsBroadcast } from "react-icons/bs";
 import MarkerContextMenu from "./MarkerContextMenu";
+import { AppContext } from './App';
 
 
 
@@ -121,8 +122,16 @@ function MarkerProvider({ children }) {
 
   function addArea() {
     setAreas([...areas, [...areaTmpLines, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [areaFirstClick.mapLat, areaFirstClick.mapLng]]]])
+
   }
 
+  function clearCurrentArea() {
+    setAreaFirstClick(null);
+    setAreaPrevClick(null);
+    setAreaTmpLines([]);
+  }
+
+  //Return true if area is created and false otherwise
   function addAreaLine(x, y, lat, lng) {
     if (areaFirstClick === null) {
       setAreaFirstClick({
@@ -140,9 +149,8 @@ function MarkerProvider({ children }) {
     }
     else if (Math.sqrt(Math.pow(areaFirstClick.winX - x, 2) + (areaFirstClick.winY - y, 2)) <= 7) {
       addArea();
-      setAreaFirstClick(null);
-      setAreaPrevClick(null);
-      setAreaTmpLines([]);
+      clearCurrentArea();
+      return true;
     }
     else {
       setAreaTmpLines([...areaTmpLines,
@@ -154,6 +162,7 @@ function MarkerProvider({ children }) {
         mapLng: lng,
       });
     }
+    return false;
   }
 
   function clickEvent(e) {
@@ -189,6 +198,7 @@ function MarkerProvider({ children }) {
         circles,
         addCircle,
         areas,
+        clearCurrentArea,
         addAreaLine,
         areaFirstClick,
         areaTmpLines,
@@ -260,12 +270,14 @@ function CustomMarker({ marker }) {
 }
 
 function MapInteractions({ currentInteractionMode, setCursorPosition }) {
+  const { handleInteractionModeChange } = useContext(AppContext);
   const map = useMap();
   const {
     markers,
     addMarker,
     addLines,
     addCircle,
+    clearCurrentArea,
     addAreaLine,
     clickEvent,
   } = useContext(MarkerContext);
@@ -292,6 +304,10 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
 
   function onMapLeftClick(e) {
     clickEvent(e);
+
+    if (currentInteractionMode !== "area") {
+      clearCurrentArea();
+    }
 
     if (currentInteractionMode === "dragging") {
 
@@ -325,7 +341,10 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
     }
 
     else if (currentInteractionMode === "area") {
-      addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng);
+      // Check if a new area is created, automatically switch to dragging if true
+      if (addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng)) {
+        handleInteractionModeChange('dragging');
+      };
     }
   }
 
@@ -423,7 +442,6 @@ function MyMap({
   setBookmarkPosition,
 }) {
   const mapRef = useRef(); // Create a ref for the map
-
   const {
     markers,
     lines,
