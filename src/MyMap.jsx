@@ -94,8 +94,20 @@ function MarkerProvider({ children }) {
   const [clickedMarker, setClickedMarker] = useState(null);
   const [popup, setPopup] = useState(null);
 
-  // Add this state to track replay button usage
   const [replay, setReplay] = useState(false);
+  const [pauseReplay, setPauseReplay] = useState(false);
+  const [permanentLines, setPermanentLines] = useState(new Set()); // Store IDs of permanent lines
+
+// Function to toggle permanence of a line
+  function toggleLinePermanence(lineId) {
+    setPermanentLines(prev => {
+      const updated = new Set(prev);
+      if (updated.has(lineId)) updated.delete(lineId);
+      else updated.add(lineId);
+      return updated;
+    });
+  }
+
 
   // Modify useEffect to fetch only recent markers if not in replay mode
   useEffect(() => {
@@ -143,66 +155,53 @@ function MarkerProvider({ children }) {
   }, [markers, replay, decayRateGlobal]);
 
   // Function to handle replay button click
-  function handleReplayClick() {
-    setReplay(true);
+  async function handleReplayClick() {
+    setReplay(true); // Begin replay mode
+    setPauseReplay(false); // Reset pause state
 
-    // Fetch all records for replay
-    fetch('http://localhost:8000/caller/')
-        .then((response) => response.json())
-        .then((result) => {
-          if (result.data && result.data.length) {
-            const allRecords = result.data[0];
-            let index = 0;
+    // Fetch last 5 minutes of data
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    try {
+      const response = await fetch(`http://localhost:8000/caller/?starttime=${fiveMinutesAgo}`);
+      const result = await response.json();
 
-            // Function to replay each record one by one
-            const replayRecord = () => {
-              if (index >= allRecords.length) {
-                // End replay mode after all records are processed
-                setReplay(false);
-                return;
-              }
+      if (result.data && result.data.length) {
+        const replayData = result.data[0];
+        let index = 0;
 
-              const caller = allRecords[index];
-              const startLatLng = markers.find(marker => marker.name === caller.rff1)?.latlng;
+        // Time-lapse function
+        const replayStep = () => {
+          if (index >= replayData.length || !replay) return setReplay(false); // End if out of data or replay is stopped
 
-              if (startLatLng) {
-                const endLatLng = calculateEndPoint(startLatLng, Number(caller.bearing1), 160934.4);
-                const newLine = {
-                  start: startLatLng,
-                  end: endLatLng,
-                  id: `${caller.id}-replay`, // Unique ID for replay
-                  timestamp: new Date(caller.starttime).getTime(), // Use timestamp from the caller record
-                };
+          if (!pauseReplay) {
+            const caller = replayData[index];
+            const startLatLng = markers.find(marker => marker.name === caller.rff1)?.latlng;
+            if (startLatLng) {
+              const endLatLng = calculateEndPoint(startLatLng, Number(caller.bearing1), 160934.4);
+              const newLine = {
+                start: startLatLng,
+                end: endLatLng,
+                id: `${caller.id}-replay`,
+                timestamp: new Date(caller.starttime).getTime()
+              };
+              addLines([newLine]);
 
-                // Add line to the map
-                addLines([newLine]);
-
-                // Remove the line after the decay rate time
-                setTimeout(() => {
-                  setLines(prevLines => prevLines.filter(line => line.id !== newLine.id));
-                }, decayRateGlobal);
-
-                // Move to the next record after adding the current line
-                setTimeout(() => {
-                  index++;
-                  replayRecord();
-                }, decayRateGlobal);
-              } else {
-                // Move to the next record if no valid start point
-                index++;
-                replayRecord();
-              }
-            };
-
-            // Start replaying records one by one
-            replayRecord();
+              setTimeout(() => {
+                setLines(prev => prev.filter(line => line.id !== newLine.id || permanentLines.has(line.id)));
+              }, decayRateGlobal);
+            }
+            index++;
           }
-        })
-        .catch((error) => {
-          console.error('Error fetching records for replay:', error);
-          setReplay(false);
-        });
+          setTimeout(replayStep, 1000); // Replay interval
+        };
+
+        replayStep(); // Start replaying data
+      }
+    } catch (error) {
+      console.error("Replay data fetch error:", error);
+    }
   }
+
 
 
 
@@ -570,28 +569,15 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, addBookm
       const intervalId = setInterval(() => {
         const currentTime = new Date().getTime();
 
-        setLines(prevLines => {
-          // Filter out lines that are older than the decay rate
-          return prevLines.filter(line => currentTime - line.timestamp <= decayRate);
-        });
-
-        setMarkers(prevMarkers => {
-          // Filter out Signal markers that are older than the decay rate
-          return prevMarkers.filter(marker => {
-            // Only apply decay to markers of type 'Signal'
-            if (marker.type === 'Signal') {
-              const markerAge = currentTime - new Date(marker.pingTime).getTime();
-              return markerAge <= decayRate; // Keep Signal markers within the decay rate
-            }
-            // Keep all other types of markers
-            return true;
-          });
-        });
-      }, 1000); // Check every second
+        setLines(prev => prev.filter(line =>
+            permanentLines.has(line.id) || (currentTime - line.timestamp <= decayRate)
+        ));
+      }, 1000);
 
       return () => clearInterval(intervalId);
     }
-  }, [decayRate, setLines, setMarkers]);
+  }, [decayRate, permanentLines, setLines]);
+
 
   return (
       <>
@@ -611,6 +597,7 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, addBookm
                   eventHandlers={{
                     contextmenu: () => {
                       setClickedMarker(line);
+                      toggleLinePermanence(line.id)
                       setPopup("contextmenu");
                     }
                   }}
