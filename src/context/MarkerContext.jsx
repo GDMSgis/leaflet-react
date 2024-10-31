@@ -8,17 +8,17 @@ export const MarkerContext = createContext();
 
 export function MarkerProvider({ children }) {
     const [markers, setMarkers] = useState([
-        {
-            name: "San Francisco",
-            latlng: {
-                lat: 37.76,
-                lng: -122.45,
-            },
-            type: "RFF",
-            description: "",
-            audioFile: null,
-            pingTime: new Date().toISOString(),
-        }
+        // {
+        //     name: "San Francisco",
+        //     latlng: {
+        //         lat: 37.76,
+        //         lng: -122.45,
+        //     },
+        //     type: "RFF",
+        //     description: "",
+        //     audioFile: null,
+        //     pingTime: new Date().toISOString(),
+        // }
     ]);
     const [lines, setLines] = useState([]);
     const [circles, setCircles] = useState([]);
@@ -175,7 +175,7 @@ export function MarkerProvider({ children }) {
     const contextValue = useMemo(() => ({
         markers, setMarkers, lines, setLines, circles, areas, click, popup, clickedMarker,
         areaFirstClick, areaTmpLines, replay, setReplay, pauseReplay, setPauseReplay,
-        toggleLinePermanence, addMarker, addLines, handleReplayClick, addAreaLine, handleClickEvent,
+        toggleLinePermanence, addMarker, addLines, resetArea, handleReplayClick, addAreaLine, handleClickEvent,
         setPopup, setClickedMarker, deleteSignalInDatabase, updateSignalInDatabase
     }), [
         markers, lines, circles, areas, click, popup, clickedMarker,

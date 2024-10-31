@@ -5,7 +5,7 @@ import { MarkerContext } from '../../context/MarkerContext'; // Make sure this p
 import { calculateEndPoint, getBearing } from '../../utils/mapCalculations';
 
 function MapInteractions({ currentInteractionMode, setCursorPosition }) {
-    const { markers, addMarker, addLines, addCircle, addAreaLine, handleClickEvent } = useContext(MarkerContext);
+    const { markers, addMarker, addLines, addCircle, addAreaLine, resetArea, handleClickEvent } = useContext(MarkerContext);
 
     const handleMouseMove = debounce((e) => setCursorPosition(e.latlng), 100); // Adjust debounce time as needed
 
@@ -13,6 +13,10 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
         mousemove: handleMouseMove,
         click: (e) => {
             handleClickEvent(e);
+            if (currentInteractionMode !== 'area') {
+                resetArea();
+            }
+
             if (currentInteractionMode === 'lines') {
                 const nearbyRFFs = markers.filter(marker => marker.type === 'RFF');
                 const newLines = nearbyRFFs.map(rff => ({
