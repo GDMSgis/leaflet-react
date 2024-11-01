@@ -12,7 +12,9 @@ import MapInteractions from './MapInteractions';
 import CustomMarker from './CustomMarker';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css'; // Important - add this back if missing
-
+import Inspect from '../UI/Inspect';
+import EditForm from '../UI/EditForm';
+import MarkerContextMenu from '../../MarkerContextMenu';
 
 function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRate }) {
     const {
@@ -23,7 +25,11 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         permanentLines,
         areas,
         areaFirstClick,
-        areaTmpLines
+        areaTmpLines,
+        popup,
+        setPopup,
+        click,
+        clickedMarker
     } = useContext(MarkerContext);
 
     const mapRef = useRef();
@@ -99,42 +105,75 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         }
     }, [decayRate, setLines, permanentLines]);
 
+    const contextMenuData = [
+        {
+            name: "Inspect",
+            action: () => setPopup("inspect"),
+        },
+        {
+            name: "Edit",
+            action: () => setPopup("edit"), // Can be expanded to show an edit form
+        }//,
+        // {
+        //     name: "Delete",
+        //     action: () => {
+        //         console.info(clickedMarker)
+        //         if (clickedMarker && clickedMarker.id) {  // <-- Ensure that `clickedMarker.id` exists
+        //             deleteSignalInDatabase(clickedMarker.id);
+        //             setClickedMarker(null);
+        //             setPopup(null);
+        //         }
+        //     },
+        // },
+    ];
+
     return (
-        <MapContainer
-            center={position}
-            zoom={8}
-            ref={mapRef}
-            style={{ height: "100vh", width: "100vw" }}
-            preferCanvas={true} // 7. Add performance optimization
-        >
-            <TileLayer
-                attribution="<a href='http://www.esri.com/'>Esri</a>"
-                url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                keepBuffer={8} // 8. Improve tile handling
-            />
-            <MapInteractions
-                currentInteractionMode={currentInteractionMode}
-                setCursorPosition={setCursorPosition}
-            />
-            {renderedMarkers}
-            {renderedLines}
-            {renderedCircles}
-            {renderedAreas}
-            {visibility.areas && areaFirstClick && (
-                <CircleMarker
-                    center={[areaFirstClick.mapLat, areaFirstClick.mapLng]}
-                    pathOptions={{ color: 'yellow' }}
-                    radius={7}
+        <>
+            <MapContainer
+                center={position}
+                zoom={8}
+                ref={mapRef}
+                style={{ height: "100vh", width: "100vw" }}
+                preferCanvas={true} // 7. Add performance optimization
+            >
+                <TileLayer
+                    attribution="<a href='http://www.esri.com/'>Esri</a>"
+                    url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    keepBuffer={8} // 8. Improve tile handling
                 />
+                <MapInteractions
+                    currentInteractionMode={currentInteractionMode}
+                    setCursorPosition={setCursorPosition}
+                />
+                {renderedMarkers}
+                {renderedLines}
+                {renderedCircles}
+                {renderedAreas}
+                {visibility.areas && areaFirstClick && (
+                    <CircleMarker
+                        center={[areaFirstClick.mapLat, areaFirstClick.mapLng]}
+                        pathOptions={{ color: 'yellow' }}
+                        radius={7}
+                    />
+                )}
+                {visibility.areas && areaTmpLines.map((line, index) => (
+                    <Polyline
+                        key={`tmpLine-${index}`}
+                        pathOptions={{ color: 'yellow' }}
+                        positions={line}
+                    />
+                ))}
+            </MapContainer>
+            {popup === "inspect" && click && (
+                <Inspect />
             )}
-            {visibility.areas && areaTmpLines.map((line, index) => (
-                <Polyline
-                    key={`tmpLine-${index}`}
-                    pathOptions={{ color: 'yellow' }}
-                    positions={line}
-                />
-            ))}
-        </MapContainer>
+            {popup === "edit" && click && (
+                <EditForm marker={clickedMarker} setPopup={setPopup} updateSignalInDatabase={() => { console.log("Hi") }} />
+            )}
+            {popup === "contextmenu" && click && (
+                <MarkerContextMenu x={click.winX} y={click.winY} data={contextMenuData} />
+            )}
+        </>
     );
 }
 

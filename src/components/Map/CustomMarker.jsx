@@ -4,7 +4,7 @@ import { MarkerContext } from '../../context/MarkerContext';
 import { rffIcon, signalIcon, boatIcon } from './icons';
 
 function CustomMarker({ marker }) {
-    const { setClickedMarker, setPopup } = useContext(MarkerContext);
+    const { handleClickEvent, setClickedMarker, setPopup } = useContext(MarkerContext);
     const icon = marker.type === 'RFF' ? rffIcon : marker.type === 'Signal' ? signalIcon : boatIcon;
 
     return (
@@ -12,11 +12,15 @@ function CustomMarker({ marker }) {
             position={marker.latlng}
             icon={icon}
             eventHandlers={{
-                click: () => {
+                click: (e) => {
+                    console.log("click");
+                    handleClickEvent(e);
                     setClickedMarker(marker);
                     setPopup("inspect");
                 },
-                contextmenu: () => {
+                contextmenu: (e) => {
+                    console.log("right click");
+                    handleClickEvent(e);
                     setClickedMarker(marker);
                     setPopup("contextmenu");
                 },
