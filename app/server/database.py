@@ -1,7 +1,7 @@
 import motor.motor_asyncio
 from bson.objectid import ObjectId
 
-MONGO_DETAILS = "mongodb+srv://cory:cory@cluster.zok3m.mongodb.net/?retryWrites=true&w=majority&appName=cluster"
+MONGO_DETAILS = "mongodb+srv://GISadmin:ASUGDMS2024@giscluster.cdvyh.mongodb.net/?retryWrites=true&w=majority&appName=GISCluster"
 
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_DETAILS)
 
