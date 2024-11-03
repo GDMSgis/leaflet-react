@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 
 class CallerSchema(BaseModel):
@@ -50,3 +50,36 @@ def ResponseModel(data, message):
 
 def ErrorResponseModel(error, code, message):
     return {"error": error, "code": code, "message": message}
+
+
+class Receiver(BaseModel):
+    RFF: str = Field(...)
+    bearing: str = Field(...)
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                  "RFF" : "RFF10",
+                  "bearing": "163° 40' 08"
+                  }
+        }
+
+class Caller(BaseModel):
+    name: str = Field(...)
+    receivers: List[Receiver]
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "caller1",
+                "receivers" : [{
+                                "RFF" : "RFF10",
+                                "bearing": "163° 40' 08"
+                                },
+                                {
+                                "RFF" : "RFF11",
+                                "bearing": "280° 34' 24"
+                                }
+                            ]
+                        }
+                    }
