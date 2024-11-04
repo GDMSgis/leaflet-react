@@ -23,12 +23,12 @@ async def add_caller_data(caller: Caller = Body(...)):
     return ResponseModel(new_caller, "Caller added successfully.")
 
 
-# @router.get("/", response_description="Callers retrieved")
-# async def get_callers():
-#     callers = await retrieve_callers()
-#     if callers:
-#         return ResponseModel(callers, "Callers data retrieved successfully")
-#     return ResponseModel(callers, "Empty list returned")
+@router.get("/", response_description="Callers retrieved")
+async def get_callers():
+    callers = await retrieve_callers()
+    if callers:
+        return ResponseModel(callers, "Callers data retrieved successfully")
+    return ResponseModel(callers, "Empty list returned")
 
 
 # @router.get("/{id}", response_description="Caller data retrieved")
