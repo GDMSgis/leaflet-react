@@ -80,7 +80,7 @@ function MarkerProvider({ children }) {
         lng: -122.45,
       },
       type: "RFF",
-      description: "",
+      description: "SAR Signal Relay",
       audioFile: null,
       pingTime: new Date().toISOString(),
     }
@@ -338,6 +338,11 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
       || currentInteractionMode === 'Signal'
       || currentInteractionMode === 'Boat') {
       addMarker(e.latlng, currentInteractionMode, `${currentInteractionMode} Marker Description`);
+
+      // Switch back to dragging after placing an RFF marker
+      if (currentInteractionMode === 'RFF') {
+        handleInteractionModeChange('dragging');
+      }
     }
 
     else if (currentInteractionMode === "area") {
@@ -508,11 +513,10 @@ function MyMap({
       const mapInstance = mapRef.current;
       mapInstance.flyTo(bookmarkPosition, 9);
 
-      // Update the bookmark position state after flying to the location (thank you andy)
-      setBookmarkPosition(null);
-
+      // Update the bookmark position state after flying to the location
+      setBookmarkPosition(null); // Ensure this is called
     }
-  }, [bookmarkPosition]);
+  }, [bookmarkPosition, setBookmarkPosition]);
 
   return (
     <>

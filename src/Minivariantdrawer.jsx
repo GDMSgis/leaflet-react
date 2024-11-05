@@ -11,6 +11,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Button from '@mui/material/Button';
 import { FaBroadcastTower } from 'react-icons/fa';
 import { RiShip2Line } from 'react-icons/ri';
 import { BsBroadcast } from 'react-icons/bs';
@@ -19,6 +20,9 @@ import { useContext } from 'react';
 import { AppContext } from './App'; 
 import { FaArrowsAlt } from 'react-icons/fa';
 import { RiFilterOffLine } from 'react-icons/ri';
+import { BookmarkList } from './App';
+import { FaBookBookmark } from 'react-icons/fa6';
+import { FaRedoAlt } from 'react-icons/fa';
 
 const drawerWidth = 240;
 
@@ -29,6 +33,8 @@ const openedMixin = (theme) => ({
     duration: theme.transitions.duration.enteringScreen,
   }),
   overflowX: 'hidden',
+  height: '100vh', // Set fixed height
+  overflowY: 'auto', // Make it scrollable
 });
 
 const closedMixin = (theme) => ({
@@ -41,6 +47,8 @@ const closedMixin = (theme) => ({
   [theme.breakpoints.up('sm')]: {
     width: `calc(${theme.spacing(8)} + 1px)`,
   },
+  height: '100vh', // Set fixed height
+  overflowY: 'auto', // Make it scrollable
 });
 
 const DrawerHeader = styled('div')(({ theme }) => ({
@@ -80,7 +88,7 @@ export default function MiniDrawer() {
     setOpen(false);
   };
 
-  const { handleInteractionModeChange, toggleVisibility, visibility } = useContext(AppContext); // Use the context to get the function
+  const { handleInteractionModeChange, toggleVisibility, visibility, bookmarks, setBookmarkPosition } = useContext(AppContext); // Use the context to get the function
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', zIndex: 1000 }}> {/* Ensure full height */}
@@ -105,6 +113,29 @@ export default function MiniDrawer() {
           )}
         </DrawerHeader>
         <List>
+        <ListItem disablePadding sx={{ display: 'block' }}>
+            <ListItemButton
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? 'initial' : 'center',
+                px: 2.5,
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 3 : 'auto',
+                  justifyContent: 'center',
+                }}
+              >
+                <FaRedoAlt />
+              </ListItemIcon>
+              <ListItemText
+                primary="Replay"
+                sx={{ opacity: open ? 1 : 0 }}
+              />
+            </ListItemButton>
+          </ListItem>
           <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
@@ -112,6 +143,7 @@ export default function MiniDrawer() {
                 justifyContent: open ? 'initial' : 'center',
                 px: 2.5,
               }}
+              onClick={() => handleInteractionModeChange('RFF')}
             >
               <ListItemIcon
                 sx={{
@@ -128,13 +160,14 @@ export default function MiniDrawer() {
               />
             </ListItemButton>
           </ListItem>
-          <ListItem disablePadding sx={{ display: 'block' }}>
+          {/* <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
                 minHeight: 48,
                 justifyContent: open ? 'initial' : 'center',
                 px: 2.5,
               }}
+              onClick={() => handleInteractionModeChange('Boat')}
             >
               <ListItemIcon
                 sx={{
@@ -150,8 +183,8 @@ export default function MiniDrawer() {
                 sx={{ opacity: open ? 1 : 0 }}
               />
             </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding sx={{ display: 'block' }}>
+          </ListItem> */}
+          {/* <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
                 minHeight: 48,
@@ -173,7 +206,7 @@ export default function MiniDrawer() {
                 sx={{ opacity: open ? 1 : 0 }}
               />
             </ListItemButton>
-          </ListItem>
+          </ListItem> */}
           <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
@@ -198,7 +231,7 @@ export default function MiniDrawer() {
               />
             </ListItemButton>
           </ListItem>
-          <ListItem disablePadding sx={{ display: 'block' }}>
+          {/* <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
                 minHeight: 48,
@@ -214,14 +247,14 @@ export default function MiniDrawer() {
                   justifyContent: 'center',
                 }}
               >
-                <FaArrowsAlt /> {/* Icon for dragging */}
+                <FaArrowsAlt />
               </ListItemIcon>
               <ListItemText
                 primary="Dragging"
                 sx={{ opacity: open ? 1 : 0 }}
               />
             </ListItemButton>
-          </ListItem>
+          </ListItem> */}
           <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
@@ -247,6 +280,28 @@ export default function MiniDrawer() {
             </ListItemButton>
           </ListItem>
         </List>
+        {open ? (
+          <BookmarkList bookmarks={bookmarks} setBookmarkPosition={setBookmarkPosition} /> 
+        ) : (
+          <ListItem disablePadding sx={{ display: 'block' }}>
+            <ListItemButton
+              sx={{
+                minHeight: 48,
+                justifyContent: 'center',
+                px: 2.5,
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  justifyContent: 'center',
+                }}
+              >
+                <FaBookBookmark />
+              </ListItemIcon>
+            </ListItemButton>
+          </ListItem>
+        )}
       </Drawer>
     </Box>
   );
