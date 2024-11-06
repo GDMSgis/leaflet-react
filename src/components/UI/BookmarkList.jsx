@@ -1,8 +1,14 @@
 import { List, ListItem, ListItemText, ListItemIcon, IconButton, Typography } from '@mui/material';
 import { FaBookBookmark } from 'react-icons/fa6';
+import React, { useContext } from 'react';
+import { MarkerContext } from '../../context/MarkerContext';
 
 // Bookmark List component
-function BookmarkList({ bookmarks, setBookmarkPosition }) {
+function BookmarkList() {
+    const { bookmarks, setBookmarkPosition, getIcon } = useContext(MarkerContext);
+
+
+
     return (
         <div style={{ overflowY: 'auto', height: 'calc(100vh - 200px)' }}> {/* Adjust height as needed */}
             <div className="flex items-center gap-5 font-bold text-2xl p-1 mb-0 ml-5 underline">

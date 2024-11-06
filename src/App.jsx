@@ -29,8 +29,6 @@ function getIcon(type) {
 
 function App() {
   const { handleReplayClick, setPauseReplay, replay, pauseReplay, setReplay, markers } = useContext(MarkerContext);
-  const [bookmarks, setBookmarks] = useState([]);
-  const [bookmarkPosition, setBookmarkPosition] = useState(null);
   const [cursorPosition, setCursorPosition] = useState({ lat: 0, lng: 0 });
   const [currentInteractionMode, setCurrentInteractionMode] = useState('dragging');
   const [visibility, setVisibility] = useState({
@@ -44,9 +42,7 @@ function App() {
   });
   const [decayRate, setDecayRate] = useState(30000);
 
-  function addBookmark(marker) {
-    setBookmarks((prevBookmarks) => [...prevBookmarks, marker]);
-  }
+
 
   function handleInteractionModeChange(mode) {
     setCurrentInteractionMode(mode);
@@ -85,7 +81,7 @@ function App() {
   }
 
   return (
-    <AppContext.Provider value={{ handleInteractionModeChange, toggleVisibility, visibility, bookmarks, setBookmarkPosition }}>
+    <AppContext.Provider value={{ handleInteractionModeChange, toggleVisibility, visibility }}>
       <MarkerProvider>
         <div>
 
@@ -94,9 +90,6 @@ function App() {
             currentInteractionMode={currentInteractionMode}
             visibility={visibility}
             setCursorPosition={setCursorPosition}
-            addBookmark={addBookmark}
-            bookmarkPosition={bookmarkPosition}
-            setBookmarkPosition={setBookmarkPosition}
             decayRate={decayRate}
           />
 

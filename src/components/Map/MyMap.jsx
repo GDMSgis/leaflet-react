@@ -31,7 +31,10 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         popup,
         setPopup,
         click,
-        clickedMarker
+        clickedMarker,
+        addBookmark,
+        bookmarkPosition,
+        setBookmarkPosition
     } = useContext(MarkerContext);
 
     const mapRef = useRef();
@@ -107,6 +110,18 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         }
     }, [decayRate, setLines, permanentLines]);
 
+
+    // If bookmark position is set, fly to that position
+    useEffect(() => {
+        if (bookmarkPosition && mapRef.current) {
+            const mapInstance = mapRef.current;
+            mapInstance.flyTo(bookmarkPosition, 9);
+
+            // Update the bookmark position state after flying to the location
+            setBookmarkPosition(null); // Ensure this is called
+        }
+    }, [bookmarkPosition, setBookmarkPosition]);
+
     const contextMenuData = [
         {
             name: "Inspect",
@@ -115,7 +130,14 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         {
             name: "Edit",
             action: () => setPopup("edit"), // Can be expanded to show an edit form
-        }//,
+        },
+        {
+            name: "Add to Bookmarks",
+            action: () => { addBookmark(clickedMarker); setPopup(null) }, // Can be expanded to show an edit form
+        }
+
+
+        //,
         // {
         //     name: "Delete",
         //     action: () => {

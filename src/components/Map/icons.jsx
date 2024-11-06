@@ -18,4 +18,4 @@ function createCustomIcon(iconComponent) {
 export const rffIcon = createCustomIcon(<FaBroadcastTower size={25} />);
 export const signalIcon = createCustomIcon(<BsBroadcast size={25} />);
 export const boatIcon = createCustomIcon(<RiShip2Line size={25} />);
-export const placemarkIcon = createCustomIcon(<FaMapMarkerAlt size={25} />)
+export const placemarkIcon = createCustomIcon(<FaMapMarkerAlt size={25} />);

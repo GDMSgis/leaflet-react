@@ -4,6 +4,11 @@ import { calculateEndPoint, getBearing } from '../utils/mapCalculations';
 import { addSignalToDatabase, updateSignalInDatabase, deleteSignalInDatabase } from '../utils/apiCalls';
 import { debounce } from 'lodash';
 
+import { FaBroadcastTower, FaMapMarkerAlt } from 'react-icons/fa';
+import { BsBroadcast } from "react-icons/bs";
+import { RiShip2Line } from "react-icons/ri";
+
+
 export const MarkerContext = createContext();
 
 export function MarkerProvider({ children }) {
@@ -48,6 +53,12 @@ export function MarkerProvider({ children }) {
     const [permanentLines, setPermanentLines] = useState(new Set());
     const [replay, setReplay] = useState(false);
     const [pauseReplay, setPauseReplay] = useState(false);
+    const [bookmarks, setBookmarks] = useState([]);
+    const [bookmarkPosition, setBookmarkPosition] = useState(null);
+
+    function addBookmark(marker) {
+        setBookmarks((prevBookmarks) => [...prevBookmarks, marker]);
+    }
 
     let decayRateGlobal = 0;
 
@@ -207,7 +218,34 @@ export function MarkerProvider({ children }) {
         return null;
     };
 
+    // Function to get the icon based on the type
+    function getIcon(type) {
+        switch (type) {
+            case 'RFF':
+                return <FaBroadcastTower size={18} />;
+            case 'Signal':
+                return <BsBroadcast size={18} />;
+            case 'Boat':
+                return <RiShip2Line size={18} />;
+            case 'Placemark':
+                return <FaMapMarkerAlt size={18} />
+            default:
+                return null;
+        }
+    };
+
+    function updateClickedMarker(latlng) {
+        if (latlng === null) {
+            setClickedMarker(null);
+        }
+        else {
+            const m = markers.filter(x => x.latlng.lat === latlng.lat || x.latlng.lng === latlng.lng);
+            setClickedMarker(m.length > 0 ? m[0] : null);
+        }
+    }
+
     const handleClickEvent = (e) => {
+        updateClickedMarker(e.latlng);
         setClick({ winX: e.originalEvent.x, winY: e.originalEvent.y, mapLat: e.latlng.lat, mapLng: e.latlng.lng });
         setPopup(null);
     };
@@ -217,7 +255,8 @@ export function MarkerProvider({ children }) {
         markers, setMarkers, lines, setLines, circles, areas, click, popup, clickedMarker,
         areaFirstClick, areaTmpLines, replay, setReplay, pauseReplay, setPauseReplay,
         toggleLinePermanence, addMarker, addLines, resetArea, handleReplayClick, addAreaLine, handleClickEvent,
-        setPopup, setClickedMarker, deleteSignalInDatabase, updateSignalInDatabase
+        setPopup, setClickedMarker, deleteSignalInDatabase, updateSignalInDatabase, addBookmark, bookmarks, setBookmarks,
+        getIcon, setBookmarkPosition, bookmarkPosition
     }), [
         markers, lines, circles, areas, click, popup, clickedMarker,
         areaFirstClick, areaTmpLines, replay, pauseReplay
