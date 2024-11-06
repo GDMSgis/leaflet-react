@@ -57,7 +57,7 @@ class Receiver(BaseModel):
     bearing: str = Field(...)
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                   "RFF" : "RFF10",
                   "bearing": "163° 40' 08"
@@ -69,7 +69,7 @@ class Caller(BaseModel):
     receivers: List[Receiver]
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "caller1",
                 "receivers" : [{

@@ -46,7 +46,7 @@ def calc_intersection(lat1, long1, bearing1, lat2, long2, bearing2):
 
 #Degrees as a string XX* X' X" N
 def degrees_to_decimal(degrees):
-    nums = [float(x) for x in re.findall("\d+", degrees)]
+    nums = [float(x) for x in re.findall(r"\d+", degrees)]
     nums[1] += nums[2] / 60
     nums[0] += nums[1] / 60
     print(nums[0])
