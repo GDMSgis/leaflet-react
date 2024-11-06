@@ -157,17 +157,11 @@ export function MarkerProvider({ children }) {
         } else if (getDistance(clickPoint, areaFirstClick) <= 2000) {
             setAreas(prevAreas => [...prevAreas, [...areaTmpLines, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [areaFirstClick.mapLat, areaFirstClick.mapLng]]]]);
             resetArea();
-            console.log(getDistance(clickPoint, areaFirstClick));
-
             return true;
         } else {
             setAreaTmpLines(prev => [...prev, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [lat, lng]]]);
             setAreaPrevClick(clickPoint);
         }
-        console.log(areaFirstClick);
-        console.log(clickPoint)
-        console.log(getDistance(clickPoint, areaFirstClick));
-
         return false;
     };
 

@@ -6,7 +6,6 @@ import { calculateEndPoint, getBearing } from '../../utils/mapCalculations';
 import { AppContext } from '../../App';
 
 function MapInteractions({ currentInteractionMode, setCursorPosition }) {
-    console.log(currentInteractionMode);
     const { handleInteractionModeChange } = useContext(AppContext);
     const { markers, addMarker, addLines, addCircle, addAreaLine, resetArea, handleClickEvent } = useContext(MarkerContext);
 
