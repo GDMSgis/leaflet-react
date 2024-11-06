@@ -17,6 +17,7 @@ rff_collection = database.get_collection("RFF")
 def rff_helper(rff) -> dict:
     return {
         "id": str(rff["_id"]),
+        "name": rff["name"],
         "lat": rff["lat"],
         "lng": rff["long"]
     }

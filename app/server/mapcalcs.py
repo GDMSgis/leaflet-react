@@ -15,7 +15,6 @@ def calc_intersection(lat1, long1, bearing1, lat2, long2, bearing2):
     numerator = math.sin(lat1) - math.sin(lat2) * math.cos(ang_dist_12)
     denominator = math.sin(ang_dist_12) * math.cos(lat2)
     theta_b = math.acos(numerator / denominator)
-
     if math.sin(long2 - long1) > 0:
         theta_12 = theta_a
         theta_21 = 2 * math.pi - theta_b

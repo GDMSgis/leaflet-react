@@ -21,6 +21,7 @@ export function MarkerProvider({ children }) {
                 const response = await fetch('http://localhost:8000/caller/RFFs');
                 const result = await response.json();
                 if (result.data?.length) {
+                    console.log(result.data[0]);
                     result.data[0].map(RFF => {
                         setMarkers((prevMarkers) => [...prevMarkers, {
                             "id": RFF.id,
@@ -29,7 +30,7 @@ export function MarkerProvider({ children }) {
                                 "lng": RFF.lng
                             },
                             "type": "RFF",
-                            "description": ""
+                            "description": RFF.name
                         }
                         ])
                     })
