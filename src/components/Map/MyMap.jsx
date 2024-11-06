@@ -17,6 +17,8 @@ import EditForm from '../UI/EditForm';
 import MarkerContextMenu from '../../MarkerContextMenu';
 
 function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRate }) {
+    const maptiles = ["World_Imagery", "World_Street_Map", "NatGeo_World_Map"];
+    const mapnum = 0
     const {
         markers,
         lines,
@@ -147,7 +149,7 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
             >
                 <TileLayer
                     attribution="<a href='http://www.esri.com/'>Esri</a>"
-                    url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    url={`http://server.arcgisonline.com/ArcGIS/rest/services/${maptiles[mapnum]}/MapServer/tile/{z}/{y}/{x}`}
                     keepBuffer={8} // 8. Improve tile handling
                 />
                 <MapInteractions
