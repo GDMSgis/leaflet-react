@@ -31,7 +31,7 @@ function BottomTab({ lat, lng }) {
         <div
             className={"absolute bottom-0 right-0 bg-gray-300 bg-opacity-100 text-white font-bold  w-3/12 h-[3.5vh]"
                 + " shadow shadow-gray-600 text-xl text-center"}
-            style={{ zIndex: 1000, }}
+            style={{ zIndex: 1000 }}
         >
             {/*Attributions*/}
             <div className="flex flex-row justify-between px-3">

@@ -129,6 +129,15 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
 
     return (
         <>
+            {popup === "inspect" && click && (
+                <Inspect />
+            )}
+            {popup === "edit" && click && (
+                <EditForm marker={clickedMarker} setPopup={setPopup} updateSignalInDatabase={() => { console.log("Hi") }} />
+            )}
+            {popup === "contextmenu" && click && (
+                <MarkerContextMenu x={click.winX} y={click.winY} data={contextMenuData} />
+            )}
             <MapContainer
                 center={position}
                 zoom={8}
@@ -164,15 +173,7 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
                     />
                 ))}
             </MapContainer>
-            {popup === "inspect" && click && (
-                <Inspect />
-            )}
-            {popup === "edit" && click && (
-                <EditForm marker={clickedMarker} setPopup={setPopup} updateSignalInDatabase={() => { console.log("Hi") }} />
-            )}
-            {popup === "contextmenu" && click && (
-                <MarkerContextMenu x={click.winX} y={click.winY} data={contextMenuData} />
-            )}
+
         </>
     );
 }
