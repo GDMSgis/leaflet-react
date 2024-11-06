@@ -153,7 +153,7 @@ export function MarkerProvider({ children }) {
             setAreaFirstClick(clickPoint);
             setAreaPrevClick(clickPoint);
         } else if (getDistance(clickPoint, areaFirstClick) <= 7) {
-            setAreas(prevAreas => [...prevAreas, [...areaTmpLines, [[clickPoint.mapLat, clickPoint.mapLng], [areaFirstClick.mapLat, areaFirstClick.mapLng]]]]);
+            setAreas(prevAreas => [...prevAreas, [...areaTmpLines, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [areaFirstClick.mapLat, areaFirstClick.mapLng]]]]);
             resetArea();
         } else {
             setAreaTmpLines(prev => [...prev, [[areaPrevClick.mapLat, areaPrevClick.mapLng], [lat, lng]]]);
