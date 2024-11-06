@@ -1,4 +1,4 @@
-import React, { useState, useContext, createContext } from 'react';
+import React, { useState, useContext, createContext, useEffect } from 'react';
 import MyMap from './components/Map/MyMap';
 import { MarkerProvider, MarkerContext } from './context/MarkerContext.jsx';
 import Button from '@mui/material/Button';
@@ -10,7 +10,8 @@ import { TfiLayoutLineSolid } from "react-icons/tfi";
 import { FaBookBookmark } from "react-icons/fa6";
 import Drawer from './components/UI/Minivariantdrawer';
 import { FaMapMarkedAlt } from "react-icons/fa";
-import { List, ListItem, ListItemText, ListItemIcon, IconButton, Typography} from '@mui/material';
+import { List, ListItem, ListItemText, ListItemIcon, IconButton, Typography } from '@mui/material';
+import BottomTab from './components/UI/BottomTab.jsx';
 
 export const AppContext = createContext();
 
@@ -71,10 +72,7 @@ function BookmarkList({ bookmarks, setBookmarkPosition }) {
 export { BookmarkList };
 
 function App() {
-
-  
-  const { handleReplayClick, setPauseReplay, replay, pauseReplay, setReplay } = useContext(MarkerContext);
-
+  const { handleReplayClick, setPauseReplay, replay, pauseReplay, setReplay, markers } = useContext(MarkerContext);
   const [bookmarks, setBookmarks] = useState([]);
   const [bookmarkPosition, setBookmarkPosition] = useState(null);
   const [cursorPosition, setCursorPosition] = useState({ lat: 0, lng: 0 });
@@ -106,92 +104,49 @@ function App() {
 
   function ModeButton({ mode, children }) {
     return (
-        <Button
-            variant="contained"
-            color={currentInteractionMode === mode ? "primary" : "secondary"}
-            onClick={() => handleInteractionModeChange(mode)}
-        >
-          {children}
-        </Button>
+      <Button
+        variant="contained"
+        color={currentInteractionMode === mode ? "primary" : "secondary"}
+        onClick={() => handleInteractionModeChange(mode)}
+      >
+        {children}
+      </Button>
     );
   }
 
   function VisibilityButton({ layer, children }) {
     return (
-        <Button
-            variant="outlined"
-            color={!visibility[layer] ? "error" : "success"}
-            onClick={() => toggleVisibility(layer)}
-        >
-          {!visibility[layer] ? <RiFilterOffLine /> : <RiFilterFill />}
-          {children}
-        </Button>
+      <Button
+        variant="outlined"
+        color={!visibility[layer] ? "error" : "success"}
+        onClick={() => toggleVisibility(layer)}
+      >
+        {!visibility[layer] ? <RiFilterOffLine /> : <RiFilterFill />}
+        {children}
+      </Button>
     );
   }
 
-  function decimalToDegrees(lat, long) {
-    let latDirection = "N";
-    let longDirection = "E";
-    if (lat < 0) {
-      latDirection = "S";
-      lat *= -1;
-    }
-    if (long < 0) {
-      longDirection = "W";
-      long *= -1;
-    }
-    const latdeg = Math.trunc(lat);
-    const latmin = Math.trunc((lat - latdeg) * 60);
-    const latsec = Math.trunc(((lat - latdeg) * 60 - latmin) * 60);
-
-    const longdeg = Math.trunc(long);
-    const longmin = Math.trunc((long - longdeg) * 60);
-    const longsec = Math.trunc(((long - longdeg) * 60 - longmin) * 60);
-
-    const latString = `${latdeg}\u00B0 ${latmin < 10 ? `0${latmin}` : latmin}' ${latsec < 10 ? `0${latsec}` : latsec}"${latDirection}`;
-    const longString = `${longdeg}\u00B0 ${longmin < 10 ? `0${longmin}` : longmin}' ${longsec < 10 ? `0${longsec}` : longsec}"${longDirection}`;
-
-    return `${latString} ${longString}`;
-  }
 
   return (
     <AppContext.Provider value={{ handleInteractionModeChange, toggleVisibility, visibility, bookmarks, setBookmarkPosition }}>
       <MarkerProvider>
         <div>
-    
+
 
           <MyMap
-              currentInteractionMode={currentInteractionMode}
-              visibility={visibility}
-              setCursorPosition={setCursorPosition}
-              addBookmark={addBookmark}
-              bookmarkPosition={bookmarkPosition}
-              setBookmarkPosition={setBookmarkPosition}
-              decayRate={decayRate}
+            currentInteractionMode={currentInteractionMode}
+            visibility={visibility}
+            setCursorPosition={setCursorPosition}
+            addBookmark={addBookmark}
+            bookmarkPosition={bookmarkPosition}
+            setBookmarkPosition={setBookmarkPosition}
+            decayRate={decayRate}
           />
 
           <Drawer></Drawer>
 
-          <div
-            className={"absolute bottom-0 right-0 bg-gray-300 bg-opacity-100 text-white font-bold  w-3/12 h-[3.5vh]"
-              + " shadow shadow-gray-600 text-xl text-center"}
-            style={{ zIndex: 1000,  }}
-          >
-            {/*Attributions*/}
-            <div className="flex flex-row justify-between px-3">
-              <div className={"flex flex-row"}>
-                <div className="flex flex-row">
-                  <a className="hover:underline text-black" href="https://leafletjs.com/">Leaflet</a>
-                  <p className="text-black">&nbsp;|&nbsp;</p>
-                  <a className="hover:underline text-black" href="www.esri.com">Esri</a>
-                </div>
-              </div>
-              {/*Lat-Long*/}
-              <div className={"flex flex-row"} style={{ marginLeft: '20px' }}> {/* Add margin here */}
-                <p className="text-black">{decimalToDegrees(cursorPosition.lat, cursorPosition.lng)}</p>
-              </div>
-            </div>
-          </div>
+          <BottomTab lat={cursorPosition.lat} lng={cursorPosition.lng}></BottomTab>
 
         </div>
       </MarkerProvider>

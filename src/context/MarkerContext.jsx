@@ -7,19 +7,35 @@ import { debounce } from 'lodash';
 export const MarkerContext = createContext();
 
 export function MarkerProvider({ children }) {
-    const [markers, setMarkers] = useState([
-        // {
-        //     name: "San Francisco",
-        //     latlng: {
-        //         lat: 37.76,
-        //         lng: -122.45,
-        //     },
-        //     type: "RFF",
-        //     description: "",
-        //     audioFile: null,
-        //     pingTime: new Date().toISOString(),
-        // }
-    ]);
+    const [markers, setMarkers] = useState([]);
+
+    // Initialize RFFs from database
+    useEffect(() => {
+        const fetchRFFs = async () => {
+            try {
+                const response = await fetch('http://localhost:8000/caller/RFFs');
+                const result = await response.json();
+                if (result.data?.length) {
+                    result.data[0].map(RFF => {
+                        setMarkers((prevMarkers) => [...prevMarkers, {
+                            "id": RFF.id,
+                            "latlng": {
+                                "lat": RFF.lat,
+                                "lng": RFF.lng
+                            },
+                            "type": "RFF",
+                            "description": ""
+                        }
+                        ])
+                    })
+                }
+            } catch (error) {
+                console.error('Error fetching RFFs:', error);
+            }
+        }
+        fetchRFFs();
+    }, []);
+
     const [lines, setLines] = useState([]);
     const [circles, setCircles] = useState([]);
     const [areas, setAreas] = useState([]);
@@ -78,6 +94,7 @@ export function MarkerProvider({ children }) {
 
         if (type === 'Signal') addSignalToDatabase(newMarker.rff1, newMarker.bearing1);
     };
+
 
     // Throttled data fetching to reduce network load
     useEffect(() => {
