@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body
 from fastapi.encoders import jsonable_encoder
 
 from ..database import (
+    retrieve_RFFs,
     add_caller,
     delete_caller,
     retrieve_caller,
@@ -30,6 +31,13 @@ async def get_callers():
         return ResponseModel(callers, "Callers data retrieved successfully")
     return ResponseModel(callers, "Empty list returned")
 
+@router.get("/RFFs", response_description="RFFs retrieved")
+async def get_RFFs():
+    rffs = await retrieve_RFFs()
+    if rffs:
+        return ResponseModel(rffs, "RFFs data retrieved successfully")
+    return ResponseModel(rffs, "Empty list returned")
+
 
 # @router.get("/{id}", response_description="Caller data retrieved")
 # async def get_caller_data(id):
@@ -39,7 +47,7 @@ async def get_callers():
 #     return ErrorResponseModel("An error occurred.", 404, "Caller doesn't exist.")
 
 
-# @router.put("/{id}")
+# @rou ter.put("/{id}")
 # async def update_caller_data(id: str, req: UpdateCallerModel = Body(...)):
 #     req = {k: v for k, v in req.dict().items() if v is not None}
 #     updated_caller = await update_caller(id, req)
@@ -51,7 +59,7 @@ async def get_callers():
 #     return ErrorResponseModel(
 #         "An error occurred",
 #         404,
-#         "There was an error updating the caller data.",
+#         "There was an error updating the callerdata.",
 #     )
 
 

@@ -51,6 +51,10 @@ def degrees_to_decimal(degrees):
     nums[1] += nums[2] / 60
     nums[0] += nums[1] / 60
     print(nums[0])
+    
+    if "S" in degrees or "W" in degrees:
+        nums[0] *= -1
+    
     return nums[0]
 
 def decimalToDegrees(lat, long):

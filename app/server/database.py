@@ -13,6 +13,14 @@ database = client.Rescue21
 caller_collection = database.get_collection("Caller")
 rff_collection = database.get_collection("RFF")
 
+# Leaflet denotes as lat, lng
+def rff_helper(rff) -> dict:
+    return {
+        "id": str(rff["_id"]),
+        "lat": rff["lat"],
+        "lng": rff["long"]
+    }
+
 def caller_helper(caller) -> dict:
     return {
         "id": str(caller["_id"]),
@@ -41,6 +49,13 @@ async def fix_helper(caller) -> dict:
     fix["lat"] = lat
     fix["long"] = long
     return fix
+
+# Retrieve all RFFs present in the database
+async def retrieve_RFFs():
+    rffs = []
+    async for rff in rff_collection.find():
+        rffs.append(rff_helper(rff))
+    return rffs
 
 # Retrieve all callers present in the database
 async def retrieve_callers():
