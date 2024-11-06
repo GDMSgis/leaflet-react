@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { FaBroadcastTower } from "react-icons/fa";
+import { FaBroadcastTower, FaMapMarkerAlt } from "react-icons/fa";
 import { BsBroadcast } from "react-icons/bs";
 import { RiShip2Line } from "react-icons/ri";
 
@@ -18,3 +18,4 @@ function createCustomIcon(iconComponent) {
 export const rffIcon = createCustomIcon(<FaBroadcastTower size={25} />);
 export const signalIcon = createCustomIcon(<BsBroadcast size={25} />);
 export const boatIcon = createCustomIcon(<RiShip2Line size={25} />);
+export const placemarkIcon = createCustomIcon(<FaMapMarkerAlt size={25} />)

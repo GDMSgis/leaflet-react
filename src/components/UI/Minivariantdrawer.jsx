@@ -7,18 +7,18 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ListItemButton from '@mui/material/ListItemButton';
 import Button from '@mui/material/Button';
-import { FaBroadcastTower } from 'react-icons/fa';
+import { FaBroadcastTower, FaMapMarkerAlt } from 'react-icons/fa';
 import { RiShip2Line } from 'react-icons/ri';
 import { BsBroadcast } from 'react-icons/bs';
 import { FaMapMarkedAlt } from 'react-icons/fa';
 import { useContext } from 'react';
-import { AppContext } from '../../App'; 
+import { AppContext } from '../../App';
 import { FaArrowsAlt } from 'react-icons/fa';
 import { RiFilterOffLine } from 'react-icons/ri';
-import { BookmarkList } from '../../App';
+import BookmarkList from './BookmarkList';
 import { FaBookBookmark } from 'react-icons/fa6';
 import { FaRedoAlt } from 'react-icons/fa';
-import { List, ListItem, ListItemText, ListItemIcon, IconButton, Typography} from '@mui/material';
+import { List, ListItem, ListItemText, ListItemIcon, IconButton, Typography } from '@mui/material';
 
 const drawerWidth = 240;
 
@@ -109,7 +109,7 @@ export default function MiniDrawer() {
           )}
         </DrawerHeader>
         <List>
-        {/* <ListItem disablePadding sx={{ display: 'block' }}>
+          {/* <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
                 minHeight: 48,
@@ -132,14 +132,14 @@ export default function MiniDrawer() {
               />
             </ListItemButton>
           </ListItem> */}
-          {/* <ListItem disablePadding sx={{ display: 'block' }}>
+          <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
                 minHeight: 48,
                 justifyContent: open ? 'initial' : 'center',
                 px: 2.5,
               }}
-              onClick={() => handleInteractionModeChange('RFF')}
+              onClick={() => handleInteractionModeChange('Placemark')}
             >
               <ListItemIcon
                 sx={{
@@ -148,14 +148,14 @@ export default function MiniDrawer() {
                   justifyContent: 'center',
                 }}
               >
-                <FaBroadcastTower />
+                <FaMapMarkerAlt />
               </ListItemIcon>
               <ListItemText
-                primary="Broadcast Tower"
+                primary="Add Marker"
                 sx={{ opacity: open ? 1 : 0 }}
               />
             </ListItemButton>
-          </ListItem> */}
+          </ListItem>
           {/* <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
@@ -340,7 +340,7 @@ export default function MiniDrawer() {
           </ListItem>
         </List>
         {open ? (
-          <BookmarkList bookmarks={bookmarks} setBookmarkPosition={setBookmarkPosition} /> 
+          <BookmarkList bookmarks={bookmarks} setBookmarkPosition={setBookmarkPosition} />
         ) : (
           <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton

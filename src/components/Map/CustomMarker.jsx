@@ -1,11 +1,11 @@
 import React, { useContext } from 'react';
 import { Marker } from "react-leaflet";
 import { MarkerContext } from '../../context/MarkerContext';
-import { rffIcon, signalIcon, boatIcon } from './icons';
+import { rffIcon, signalIcon, boatIcon, placemarkIcon } from './icons';
 
 function CustomMarker({ marker }) {
     const { handleClickEvent, setClickedMarker, setPopup } = useContext(MarkerContext);
-    const icon = marker.type === 'RFF' ? rffIcon : marker.type === 'Signal' ? signalIcon : boatIcon;
+    const icon = marker.type === 'RFF' ? rffIcon : marker.type === 'Signal' ? signalIcon : marker.type === 'Boat' ? boatIcon : placemarkIcon;
 
     return (
         <Marker

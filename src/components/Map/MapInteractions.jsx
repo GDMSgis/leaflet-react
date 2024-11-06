@@ -10,6 +10,7 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
     const { markers, addMarker, addLines, addCircle, addAreaLine, resetArea, handleClickEvent } = useContext(MarkerContext);
 
     const handleMouseMove = debounce((e) => setCursorPosition(e.latlng), 100); // Adjust debounce time as needed
+    console.log(currentInteractionMode);
 
     useMapEvents({
         mousemove: handleMouseMove,
@@ -29,8 +30,10 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
                 addLines(newLines);
             } else if (currentInteractionMode === 'circles') {
                 addCircle(e.latlng, 200);
-            } else if (['RFF', 'Signal', 'Boat'].includes(currentInteractionMode)) {
-                addMarker(e.latlng, currentInteractionMode, `${currentInteractionMode} Marker Description`);
+            } else if (['Placemark', 'Signal', 'Boat'].includes(currentInteractionMode)) {
+                addMarker(e.latlng, currentInteractionMode, `${currentInteractionMode} Description`);
+                console.log(markers);
+                handleInteractionModeChange('dragging');
             } else if (currentInteractionMode === "area") {
                 if (addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng)) {
                     handleInteractionModeChange('dragging');
