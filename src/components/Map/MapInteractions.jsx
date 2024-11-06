@@ -3,8 +3,11 @@ import { useMapEvents } from "react-leaflet";
 import { debounce } from 'lodash';
 import { MarkerContext } from '../../context/MarkerContext'; // Make sure this path is correct
 import { calculateEndPoint, getBearing } from '../../utils/mapCalculations';
+import { AppContext } from '../../App';
 
 function MapInteractions({ currentInteractionMode, setCursorPosition }) {
+    console.log(currentInteractionMode);
+    const { handleInteractionModeChange } = useContext(AppContext);
     const { markers, addMarker, addLines, addCircle, addAreaLine, resetArea, handleClickEvent } = useContext(MarkerContext);
 
     const handleMouseMove = debounce((e) => setCursorPosition(e.latlng), 100); // Adjust debounce time as needed
@@ -30,7 +33,9 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
             } else if (['RFF', 'Signal', 'Boat'].includes(currentInteractionMode)) {
                 addMarker(e.latlng, currentInteractionMode, `${currentInteractionMode} Marker Description`);
             } else if (currentInteractionMode === "area") {
-                addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng);
+                if (addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng)) {
+                    handleInteractionModeChange('dragging');
+                }
             }
         },
     });
