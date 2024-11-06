@@ -495,8 +495,15 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
       if (currentInteractionMode === 'Signal') {
         addSignalToDatabase(); // Call API when in Signal mode
       }
+      // Switch back to dragging after placing an RFF marker
+      if (currentInteractionMode === 'RFF') {
+        handleInteractionModeChange('dragging');
+      }
     } else if (currentInteractionMode === "area") {
-      addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng);
+      // Check if a new area is created, automatically switch to dragging if true
+      if (addAreaLine(e.originalEvent.x, e.originalEvent.y, e.latlng.lat, e.latlng.lng)) {
+        handleInteractionModeChange('dragging');
+      };
     }
   }
 
