@@ -18,7 +18,7 @@ import MarkerContextMenu from '../../MarkerContextMenu';
 
 function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRate }) {
     const maptiles = ["World_Imagery", "World_Street_Map", "NatGeo_World_Map"];
-    const mapnum = 0
+    const mapnum = 2
     const {
         markers,
         lines,

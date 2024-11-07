@@ -26,7 +26,9 @@ def caller_helper(caller) -> dict:
     return {
         "id": str(caller["_id"]),
         "receivers": caller["receivers"],
-        "start-time": caller["start-time"]
+        "fix": caller["fix"],
+        "start-time": caller["start-time"],
+        "stop-time": caller["stop-time"]
     }
 
 async def fix_helper(caller) -> dict:
