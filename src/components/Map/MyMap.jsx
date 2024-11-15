@@ -163,56 +163,41 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
             name: "Inspect",
             action: () => setPopup("inspect"),
         },
-        {
-            name: "Edit",
-            action: () => setPopup("edit"), // Can be expanded to show an edit form
-        },
-        {
-            name: "Add to Bookmarks",
-            action: () => { addBookmark(clickedMarker); setPopup(null) }, // Can be expanded to show an edit form
-        },
+        ...(clickedMarker && clickedMarker.type !== 'line' && clickedMarker.type !== 'circle' ? [
+            {
+                name: "Add to Bookmarks",
+                action: () => { addBookmark(clickedMarker); setPopup(null); },
+            }
+        ] : []), // Only show "Add to Bookmarks" if the clicked marker is not a line or circle
         ...(clickedMarker && (clickedMarker.type === 'line' || clickedMarker.type === 'circle') ? [
-        {
-            name: "Toggle Permanence",
-            action: () => {
-                if (clickedMarker && clickedMarker.type === 'line') {
-                    permanentLines.has(clickedMarker.id)
-                        ? permanentLines.delete(clickedMarker.id)
-                        : permanentLines.add(clickedMarker.id);
-                    setLines([...lines]); // Trigger re-render for lines
-                    console.log(`Toggled permanence for line ID: ${clickedMarker.id}`);
-                } else if (clickedMarker && clickedMarker.type === 'circle') {
-                    permanentCircles.has(clickedMarker.id)
-                        ? permanentCircles.delete(clickedMarker.id)
-                        : permanentCircles.add(clickedMarker.id);
-                    setCircles([...circles]); // Trigger re-render for circles
-                    console.log(`Toggled permanence for circle ID: ${clickedMarker.id}`);
+            {
+                name: "Toggle Permanence",
+                action: () => {
+                    if (clickedMarker.type === 'line') {
+                        permanentLines.has(clickedMarker.id)
+                            ? permanentLines.delete(clickedMarker.id)
+                            : permanentLines.add(clickedMarker.id);
+                        setLines([...lines]); // Trigger re-render for lines
+                        console.log(`Toggled permanence for line ID: ${clickedMarker.id}`);
+                    } else if (clickedMarker.type === 'circle') {
+                        permanentCircles.has(clickedMarker.id)
+                            ? permanentCircles.delete(clickedMarker.id)
+                            : permanentCircles.add(clickedMarker.id);
+                        setCircles([...circles]); // Trigger re-render for circles
+                        console.log(`Toggled permanence for circle ID: ${clickedMarker.id}`);
+                    }
                 }
             }
-        } ] : [])
-
-        //,
-        // {
-        //     name: "Delete",
-        //     action: () => {
-        //         console.info(clickedMarker)
-        //         if (clickedMarker && clickedMarker.id) {  // <-- Ensure that `clickedMarker.id` exists
-        //             deleteSignalInDatabase(clickedMarker.id);
-        //             setClickedMarker(null);
-        //             setPopup(null);
-        //         }
-        //     },
-        // },
+        ] : [])
     ];
+
 
     return (
         <>
             {popup === "inspect" && click && (
                 <Inspect />
             )}
-            {popup === "edit" && click && (
-                <EditForm marker={clickedMarker} setPopup={setPopup} updateSignalInDatabase={() => { }} />
-            )}
+
             {popup === "contextmenu" && click && (
                 <MarkerContextMenu x={click.winX} y={click.winY} data={contextMenuData} />
             )}
