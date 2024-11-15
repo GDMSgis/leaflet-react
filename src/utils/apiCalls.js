@@ -1,15 +1,15 @@
-export async function addSignalToDatabase(rff1 = "---", bearing1 = "---") {
+export async function addSignalToDatabase({ name = "caller1", starttime, stoptime, fix = "---", receivers = [] }) {
     try {
         const response = await fetch('http://localhost:8000/caller/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                name,
                 channel: "16",
-                bearing1,
-                rff1,
-                fix: "---",
-                starttime: new Date().toISOString(),
-                stoptime: "---",
+                starttime,
+                stoptime,
+                fix,
+                receivers, // structured as an array of { RFF, bearing }
             }),
         });
         return await response.json();

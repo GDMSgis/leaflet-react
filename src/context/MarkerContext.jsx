@@ -52,10 +52,12 @@ export function MarkerProvider({ children }) {
     const [areaPrevClick, setAreaPrevClick] = useState(null);
     const [areaTmpLines, setAreaTmpLines] = useState([]);
     const [permanentLines, setPermanentLines] = useState(new Set());
+    const [permanentCircles, setPermanentCircles] = useState(new Set());
     const [replay, setReplay] = useState(false);
     const [pauseReplay, setPauseReplay] = useState(false);
     const [bookmarks, setBookmarks] = useState([]);
     const [bookmarkPosition, setBookmarkPosition] = useState(null);
+    const [processedCallerIds, setProcessedCallerIds] = useState(new Set()); // Track processed callers
 
     function addBookmark(marker) {
         setBookmarks((prevBookmarks) => [...prevBookmarks, marker]);
@@ -63,20 +65,36 @@ export function MarkerProvider({ children }) {
 
     let decayRateGlobal = 0;
 
-    // Debounced addLines to avoid excessive state updates
-    const addLines = debounce((newLines) => {
+    const addLines = debounce((newLines, callerData = null) => {
         setLines((prevLines) => [
             ...prevLines,
             ...newLines.filter(line => !prevLines.some(prevLine => prevLine.id === line.id))
+                .map(line => ({ ...line, callerData })) // Include `callerData` in each line
         ]);
         handleLineIntersection();
     }, 300);
+    function addCircle(center, radius, callerData = null) {
+        setCircles(prevCircles => [
+            ...prevCircles,
+            { center, radius, id: `circle-${callerData?.id || Date.now()}`, timestamp: Date.now(), callerData }
+        ]);
+    }
+
+
 
     const toggleLinePermanence = (lineId) => {
         setPermanentLines((prev) => {
             const updated = new Set(prev);
             if (updated.has(lineId)) updated.delete(lineId);
             else updated.add(lineId);
+            return updated;
+        });
+    };
+    const toggleCirclePermanence = (circleId) => {
+        setPermanentCircles(prev => {
+            const updated = new Set(prev);
+            if (updated.has(circleId)) updated.delete(circleId);
+            else updated.add(circleId);
             return updated;
         });
     };
@@ -109,23 +127,76 @@ export function MarkerProvider({ children }) {
 
 
     // Throttled data fetching to reduce network load
+    // Modify data fetching useEffect for adding circles with callerData
     useEffect(() => {
         const fetchInterval = setInterval(async () => {
             try {
                 const response = await fetch('http://localhost:8000/caller/');
                 const result = await response.json();
-                if (result.data?.length) {
-                    const recentData = result.data[0].filter(({ starttime }) =>
-                        replay || new Date(starttime).getTime() >= Date.now() - decayRateGlobal
-                    );
-                    addLines(recentData.map(caller => createLineFromCaller(caller)));
+
+                if (result.data?.length && Array.isArray(result.data[0])) {
+                    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000; // Time 5 minutes ago
+
+                    const recentData = result.data[0].filter(caller => {
+                        const startTime = new Date(caller['start-time']).getTime();
+                        return startTime >= fiveMinutesAgo && !processedCallerIds.has(caller.id);
+                    });
+
+                    if (recentData.length > 0) {
+                        setProcessedCallerIds(prevIds => new Set([...prevIds, ...recentData.map(caller => caller.id)]));
+
+                        recentData.forEach(caller => {
+                            // Attach `callerData` when creating lines
+                            const linesFromCaller = createLinesFromCaller(caller);
+                            addLines(linesFromCaller, caller); // Pass `callerData` to lines
+
+                            // Attach `callerData` when creating circles
+                            if (caller.fix) {
+                                const fixCoords = [caller.fix.lat, caller.fix.long];
+                                const exists = circles.some(circle =>
+                                    circle.center[0] === fixCoords[0] && circle.center[1] === fixCoords[1]
+                                );
+
+                                if (!exists) {
+                                    addCircle(fixCoords, 200, caller); // Pass `callerData` to circles
+                                }
+                            }
+                        });
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching signals:', error);
             }
         }, 3000);
+
         return () => clearInterval(fetchInterval);
-    }, [markers, replay, decayRateGlobal]);
+    }, [markers, replay, decayRateGlobal, circles, processedCallerIds]);
+
+
+
+    useEffect(() => {
+        if (decayRateGlobal > 0) {
+            const intervalId = setInterval(() => {
+                const currentTime = Date.now();
+
+                setLines(prevLines => {
+                    const newLines = prevLines.filter(line =>
+                        permanentLines.has(line.id) || (currentTime - line.timestamp <= decayRateGlobal)
+                    );
+                    return newLines;
+                });
+
+                setCircles(prevCircles => {
+                    const newCircles = prevCircles.filter(circle =>
+                        permanentCircles.has(circle.id) || (currentTime - circle.timestamp <= decayRateGlobal)
+                    );
+                    return newCircles;
+                });
+            }, 3000); // Adjust interval as needed
+
+            return () => clearInterval(intervalId);
+        }
+    }, [decayRateGlobal, setLines, setCircles, permanentLines, permanentCircles]);
 
     const handleReplayClick = async () => {
         setReplay(true);
@@ -154,10 +225,32 @@ export function MarkerProvider({ children }) {
         replayStep();
     };
 
-    const createLineFromCaller = (caller) => {
-        const start = markers.find(marker => marker.name === caller.rff1)?.latlng;
-        return start && { start, end: calculateEndPoint(start, Number(caller.bearing1), 160934.4), id: caller.id, timestamp: Date.now() };
+    const parseBearing = (bearingString) => {
+        // Convert "163° 40' 08" to a numeric bearing
+        const parts = bearingString.split(/[°' ]+/).filter(Boolean).map(Number);
+        return parts[0] + (parts[1] / 60) + (parts[2] / 3600);
     };
+
+    const createLinesFromCaller = (caller) => {
+        console.log('Processing caller:', caller); // Debug log
+        return caller.receivers.map(receiver => {
+            const start = markers.find(marker => marker.description === receiver.RFF)?.latlng;
+            if (start) {
+                const numericBearing = parseBearing(receiver.bearing);
+                const line = {
+                    start,
+                    end: calculateEndPoint(start, numericBearing, 160934.4), // 100 miles in meters
+                    id: `${caller.id}-${receiver.RFF}`, // Unique ID for each line
+                    timestamp: Date.now(),
+                    callerData: caller // Embed `callerData` for association
+                };
+                console.log('Created line:', line); // Debug log
+                return line;
+            }
+            return null;
+        }).filter(line => line !== null); // Remove nulls
+    };
+
 
     // Add boolean to see if an area is completed
     const addAreaLine = (x, y, lat, lng) => {
@@ -245,22 +338,33 @@ export function MarkerProvider({ children }) {
         }
     }
 
-    const handleClickEvent = (e) => {
-        updateClickedMarker(e.latlng);
-        setClick({ winX: e.originalEvent.x, winY: e.originalEvent.y, mapLat: e.latlng.lat, mapLng: e.latlng.lng });
-        setPopup(null);
+    const handleClickEvent = (e, target) => {
+        if (target) {
+            // Check if the target (line or circle) has `callerData`
+            setClickedMarker({
+                ...target,
+                callerData: target.callerData || null // Ensure `callerData` is passed if available
+            });
+            console.log('Caller Data on Click:', target.callerData); // Debug log for verification
+        } else {
+            updateClickedMarker(e.latlng);
+            setClick({ winX: e.originalEvent.x, winY: e.originalEvent.y, mapLat: e.latlng.lat, mapLng: e.latlng.lng });
+            setPopup(null);
+        }
     };
 
-    // Memoize the value provided to the context to avoid unnecessary re-renders
+
+
+    // Memoize the value provided to the context
     const contextValue = useMemo(() => ({
-        markers, setMarkers, lines, setLines, circles, areas, click, popup, clickedMarker,
+        markers, setMarkers, lines, setLines, circles, setCircles, areas, click, popup, clickedMarker,setClick,
         areaFirstClick, areaTmpLines, replay, setReplay, pauseReplay, setPauseReplay,
-        toggleLinePermanence, addMarker, addLines, resetArea, handleReplayClick, addAreaLine, handleClickEvent,
+        toggleLinePermanence, toggleCirclePermanence, addMarker, addLines, resetArea, handleReplayClick, addAreaLine, handleClickEvent,
         setPopup, setClickedMarker, deleteSignalInDatabase, updateSignalInDatabase, addBookmark, bookmarks, setBookmarks,
-        getIcon, setBookmarkPosition, bookmarkPosition
+        getIcon, setBookmarkPosition, bookmarkPosition, permanentLines, permanentCircles
     }), [
         markers, lines, circles, areas, click, popup, clickedMarker,
-        areaFirstClick, areaTmpLines, replay, pauseReplay
+        areaFirstClick, areaTmpLines, replay, pauseReplay, permanentLines,permanentCircles
     ]);
 
     return (

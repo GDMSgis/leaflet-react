@@ -1,14 +1,11 @@
 import React, { useState, useContext, createContext, useEffect } from 'react';
 import MyMap from './components/Map/MyMap';
-import { MarkerProvider, MarkerContext } from './context/MarkerContext.jsx';
+import { MarkerProvider } from './context/MarkerContext.jsx';
 import Button from '@mui/material/Button';
 import { BsBroadcast } from "react-icons/bs";
-import { RiShip2Line, RiDraggable, RiFilterFill, RiFilterOffLine } from "react-icons/ri";
+import { RiShip2Line, RiFilterFill, RiFilterOffLine } from "react-icons/ri";
 import { FaBroadcastTower } from "react-icons/fa";
-import { TbChartCircles } from "react-icons/tb";
-import { TfiLayoutLineSolid } from "react-icons/tfi";
 import Drawer from './components/UI/Minivariantdrawer';
-import { FaMapMarkedAlt } from "react-icons/fa";
 import BottomTab from './components/UI/BottomTab.jsx';
 
 export const AppContext = createContext();
@@ -24,11 +21,9 @@ function getIcon(type) {
     default:
       return null;
   }
-};
-
+}
 
 function App() {
-  const { handleReplayClick, setPauseReplay, replay, pauseReplay, setReplay, markers } = useContext(MarkerContext);
   const [cursorPosition, setCursorPosition] = useState({ lat: 0, lng: 0 });
   const [currentInteractionMode, setCurrentInteractionMode] = useState('dragging');
   const [visibility, setVisibility] = useState({
@@ -38,11 +33,11 @@ function App() {
     lines: true,
     circles: true,
     areas: true,
-    Placemark: true
+    Placemark: true,
   });
-  const [decayRate, setDecayRate] = useState(30000);
-
-
+  const [decayRate, setDecayRate] = useState(15000);
+  const [replay, setReplay] = useState(false);
+  const [pauseReplay, setPauseReplay] = useState(false);
 
   function handleInteractionModeChange(mode) {
     setCurrentInteractionMode(mode);
@@ -55,51 +50,31 @@ function App() {
     }));
   }
 
-  function ModeButton({ mode, children }) {
-    return (
-      <Button
-        variant="contained"
-        color={currentInteractionMode === mode ? "primary" : "secondary"}
-        onClick={() => handleInteractionModeChange(mode)}
-      >
-        {children}
-      </Button>
-    );
-  }
-
-  function VisibilityButton({ layer, children }) {
-    return (
-      <Button
-        variant="outlined"
-        color={!visibility[layer] ? "error" : "success"}
-        onClick={() => toggleVisibility(layer)}
-      >
-        {!visibility[layer] ? <RiFilterOffLine /> : <RiFilterFill />}
-        {children}
-      </Button>
-    );
-  }
-
   return (
-    <AppContext.Provider value={{ handleInteractionModeChange, toggleVisibility, visibility }}>
-      <MarkerProvider>
-        <div>
-
-
-          <MyMap
-            currentInteractionMode={currentInteractionMode}
-            visibility={visibility}
-            setCursorPosition={setCursorPosition}
-            decayRate={decayRate}
-          />
-
-          <Drawer></Drawer>
-
-          <BottomTab lat={cursorPosition.lat} lng={cursorPosition.lng}></BottomTab>
-
-        </div>
-      </MarkerProvider>
-    </AppContext.Provider>
+      <AppContext.Provider value={{
+        handleInteractionModeChange,
+        toggleVisibility,
+        visibility,
+        decayRate,
+        setDecayRate,
+        replay,
+        setReplay,
+        pauseReplay,
+        setPauseReplay,
+      }}>
+        <MarkerProvider>
+          <div>
+            <MyMap
+                currentInteractionMode={currentInteractionMode}
+                visibility={visibility}
+                setCursorPosition={setCursorPosition}
+                decayRate={decayRate}
+            />
+            <Drawer />
+            <BottomTab lat={cursorPosition.lat} lng={cursorPosition.lng} />
+          </div>
+        </MarkerProvider>
+      </AppContext.Provider>
   );
 }
 

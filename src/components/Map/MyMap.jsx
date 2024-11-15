@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef } from 'react';
+import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {
     MapContainer,
     TileLayer,
@@ -24,7 +24,10 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         lines,
         circles,
         setLines,
+        setClick,
+        setCircles,
         permanentLines,
+        permanentCircles,
         areas,
         areaFirstClick,
         areaTmpLines,
@@ -32,6 +35,7 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         setPopup,
         click,
         clickedMarker,
+        setClickedMarker,
         addBookmark,
         bookmarkPosition,
         setBookmarkPosition
@@ -39,7 +43,6 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
 
     const mapRef = useRef();
     const position = useMemo(() => [37.17952, -122.36], []); // Memoize initial position
-
     // 2. Proper memo comparison for markers
     const renderedMarkers = useMemo(() => (
         markers.filter(marker => visibility[marker.type]).map((marker) => (
@@ -51,36 +54,57 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
     ), [markers, visibility]);
 
     // 3. Add proper event handlers to lines
+    // Render lines with event handlers for contextmenu
     const renderedLines = useMemo(() => (
-        visibility.lines && lines.map((line, index) => (
+        visibility.lines &&
+        lines.map((line, index) => (
             <Polyline
                 key={`line-${line.id || index}`}
                 positions={[line.start, line.end]}
                 color="red"
                 eventHandlers={{
                     contextmenu: (e) => {
-                        e.originalEvent.preventDefault();
-                        if (line.id) {
-                            // Handle line context menu
-                        }
+                        e.originalEvent.preventDefault(); // Prevent the default browser context menu
+                        setClick({ winX: e.originalEvent.x, winY: e.originalEvent.y, mapLat: e.latlng.lat, mapLng: e.latlng.lng });
+                        setClickedMarker({
+                            id: line.id,
+                            type: 'line',
+                            callerData: line.callerData || null // Ensure callerData is passed if available
+                        });
+                        setPopup('contextmenu');
                     }
                 }}
             />
         ))
-    ), [lines, visibility.lines]);
+    ), [lines, visibility.lines, setClick, setClickedMarker, setPopup]);
 
-    // 4. Add visibility checks for all elements
+// Render circles with event handlers for contextmenu
     const renderedCircles = useMemo(() => (
-        visibility.circles && circles.map((circle, index) => (
+        visibility.circles &&
+        circles.map((circle, index) => (
             <Circle
-                key={`circle-${index}`}
+                key={`circle-${circle.id || index}`}
                 center={circle.center}
-                radius={circle.radius}
+                radius={5556} // 3 nautical miles in meters
                 fillColor="blue"
                 fillOpacity={0.3}
+                eventHandlers={{
+                    contextmenu: (e) => {
+                        e.originalEvent.preventDefault(); // Prevent the default browser context menu
+                        setClick({ winX: e.originalEvent.x, winY: e.originalEvent.y, mapLat: e.latlng.lat, mapLng: e.latlng.lng });
+                        setClickedMarker({
+                            id: circle.id,
+                            type: 'circle',
+                            callerData: circle.callerData || null // Ensure callerData is passed if available
+                        });
+                        setPopup('contextmenu');
+                    }
+                }}
             />
         ))
-    ), [circles, visibility.circles]);
+    ), [circles, visibility.circles, setClick, setClickedMarker, setPopup]);
+
+
 
     // 5. Add back area rendering
     const renderedAreas = useMemo(() => (
@@ -98,17 +122,29 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         if (decayRate > 0) {
             const intervalId = setInterval(() => {
                 const currentTime = Date.now();
-                setLines(prevLines =>
-                    prevLines.filter(line =>
-                        permanentLines.has(line.id) ||
-                        (currentTime - line.timestamp <= decayRate)
-                    )
-                );
-            }, Math.min(1000, decayRate / 10)); // Adjust interval based on decay rate
+                console.log('Current time:', currentTime);
+
+                setLines(prevLines => {
+                    console.log('Line timestamps:', prevLines.map(line => line.timestamp));
+                    const filteredLines = prevLines.filter(line =>
+                        permanentLines.has(line.id) || (currentTime - line.timestamp <= decayRate)
+                    );
+                    console.log('Lines after decay:', filteredLines);
+                    return filteredLines;
+                });
+
+                setCircles(prevCircles => {
+                    const filteredCircles = prevCircles.filter(circle =>
+                        permanentCircles.has(circle.id) || (currentTime - circle.timestamp <= decayRate)
+                    );
+                    return filteredCircles;
+                });
+            }, Math.max(1000, decayRate)); // Adjust interval for more stability
 
             return () => clearInterval(intervalId);
         }
-    }, [decayRate, setLines, permanentLines]);
+    }, [decayRate, setLines, setCircles, permanentLines, permanentCircles]);
+
 
 
     // If bookmark position is set, fly to that position
@@ -134,8 +170,26 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         {
             name: "Add to Bookmarks",
             action: () => { addBookmark(clickedMarker); setPopup(null) }, // Can be expanded to show an edit form
-        }
-
+        },
+        ...(clickedMarker && (clickedMarker.type === 'line' || clickedMarker.type === 'circle') ? [
+        {
+            name: "Toggle Permanence",
+            action: () => {
+                if (clickedMarker && clickedMarker.type === 'line') {
+                    permanentLines.has(clickedMarker.id)
+                        ? permanentLines.delete(clickedMarker.id)
+                        : permanentLines.add(clickedMarker.id);
+                    setLines([...lines]); // Trigger re-render for lines
+                    console.log(`Toggled permanence for line ID: ${clickedMarker.id}`);
+                } else if (clickedMarker && clickedMarker.type === 'circle') {
+                    permanentCircles.has(clickedMarker.id)
+                        ? permanentCircles.delete(clickedMarker.id)
+                        : permanentCircles.add(clickedMarker.id);
+                    setCircles([...circles]); // Trigger re-render for circles
+                    console.log(`Toggled permanence for circle ID: ${clickedMarker.id}`);
+                }
+            }
+        } ] : [])
 
         //,
         // {
@@ -157,7 +211,7 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
                 <Inspect />
             )}
             {popup === "edit" && click && (
-                <EditForm marker={clickedMarker} setPopup={setPopup} updateSignalInDatabase={() => { console.log("Hi") }} />
+                <EditForm marker={clickedMarker} setPopup={setPopup} updateSignalInDatabase={() => { }} />
             )}
             {popup === "contextmenu" && click && (
                 <MarkerContextMenu x={click.winX} y={click.winY} data={contextMenuData} />
