@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
     MapContainer,
     TileLayer,
@@ -18,7 +18,7 @@ import MarkerContextMenu from '../../MarkerContextMenu';
 
 function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRate }) {
     const maptiles = ["World_Imagery", "World_Street_Map", "NatGeo_World_Map"];
-    const mapnum = 2
+    const mapnum = 1
     const {
         markers,
         lines,
@@ -38,7 +38,7 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         setClickedMarker,
         addBookmark,
         bookmarkPosition,
-        setBookmarkPosition
+        setBookmarkPosition,
     } = useContext(MarkerContext);
 
     const mapRef = useRef();
@@ -78,7 +78,7 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         ))
     ), [lines, visibility.lines, setClick, setClickedMarker, setPopup]);
 
-// Render circles with event handlers for contextmenu
+    // Render circles with event handlers for contextmenu
     const renderedCircles = useMemo(() => (
         visibility.circles &&
         circles.map((circle, index) => (

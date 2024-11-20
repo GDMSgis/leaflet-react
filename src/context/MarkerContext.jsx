@@ -58,6 +58,7 @@ export function MarkerProvider({ children }) {
     const [bookmarks, setBookmarks] = useState([]);
     const [bookmarkPosition, setBookmarkPosition] = useState(null);
     const [processedCallerIds, setProcessedCallerIds] = useState(new Set()); // Track processed callers
+    const [viewHome, setViewHome] = useState(false);
 
     function addBookmark(marker) {
         setBookmarks((prevBookmarks) => [...prevBookmarks, marker]);
@@ -361,10 +362,10 @@ export function MarkerProvider({ children }) {
         areaFirstClick, areaTmpLines, replay, setReplay, pauseReplay, setPauseReplay,
         toggleLinePermanence, toggleCirclePermanence, addMarker, addLines, resetArea, handleReplayClick, addAreaLine, handleClickEvent,
         setPopup, setClickedMarker, deleteSignalInDatabase, updateSignalInDatabase, addBookmark, bookmarks, setBookmarks,
-        getIcon, setBookmarkPosition, bookmarkPosition, permanentLines, permanentCircles
+        getIcon, setBookmarkPosition, bookmarkPosition, permanentLines, permanentCircles, viewHome, setViewHome
     }), [
         markers, lines, circles, areas, click, popup, clickedMarker,
-        areaFirstClick, areaTmpLines, replay, pauseReplay, permanentLines, permanentCircles, bookmarkPosition
+        areaFirstClick, areaTmpLines, replay, pauseReplay, permanentLines, permanentCircles, bookmarkPosition, viewHome
     ]);
 
     return (

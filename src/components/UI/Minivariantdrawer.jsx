@@ -10,9 +10,10 @@ import Button from '@mui/material/Button';
 import { FaBroadcastTower, FaMapMarkerAlt } from 'react-icons/fa';
 import { RiShip2Line } from 'react-icons/ri';
 import { BsBroadcast } from 'react-icons/bs';
-import { FaMapMarkedAlt } from 'react-icons/fa';
+import { FaMapMarkedAlt, FaHome } from 'react-icons/fa';
 import { useContext } from 'react';
 import { AppContext } from '../../App';
+import { MarkerContext } from '../../context/MarkerContext';
 import { FaArrowsAlt } from 'react-icons/fa';
 import { RiFilterOffLine } from 'react-icons/ri';
 import BookmarkList from './BookmarkList';
@@ -84,7 +85,12 @@ export default function MiniDrawer() {
     setOpen(false);
   };
 
-  const { handleInteractionModeChange, toggleVisibility, visibility, bookmarks, setBookmarkPosition, decayRate, setDecayRate, handleReplayClick, pauseReplay, setPauseReplay, replay, setReplay } = useContext(AppContext); // Use the context to get the function
+  const { handleInteractionModeChange, toggleVisibility,
+    visibility, decayRate,
+    setDecayRate, handleReplayClick, pauseReplay, setPauseReplay,
+    replay, setReplay, bookmarks, setBookmarkPosition } = useContext(AppContext); // Use the context to get the function
+
+  const { viewHome, setViewHome } = useContext(MarkerContext);
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', zIndex: 1000 }}> {/* Ensure full height */}
@@ -132,6 +138,30 @@ export default function MiniDrawer() {
               />
             </ListItemButton>
           </ListItem> */}
+          <ListItem disablePadding sx={{ display: 'block' }}>
+            <ListItemButton
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? 'initial' : 'center',
+                px: 2.5,
+              }}
+              onClick={() => setViewHome(!viewHome)}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 3 : 'auto',
+                  justifyContent: 'center',
+                }}
+              >
+                <FaHome />
+              </ListItemIcon>
+              <ListItemText
+                primary="View California"
+                sx={{ opacity: open ? 1 : 0 }}
+              />
+            </ListItemButton>
+          </ListItem>
           <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
