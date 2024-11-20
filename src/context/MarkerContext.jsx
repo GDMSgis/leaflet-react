@@ -357,14 +357,14 @@ export function MarkerProvider({ children }) {
 
     // Memoize the value provided to the context
     const contextValue = useMemo(() => ({
-        markers, setMarkers, lines, setLines, circles, setCircles, areas, click, popup, clickedMarker,setClick,
+        markers, setMarkers, lines, setLines, circles, setCircles, areas, click, popup, clickedMarker, setClick,
         areaFirstClick, areaTmpLines, replay, setReplay, pauseReplay, setPauseReplay,
         toggleLinePermanence, toggleCirclePermanence, addMarker, addLines, resetArea, handleReplayClick, addAreaLine, handleClickEvent,
         setPopup, setClickedMarker, deleteSignalInDatabase, updateSignalInDatabase, addBookmark, bookmarks, setBookmarks,
         getIcon, setBookmarkPosition, bookmarkPosition, permanentLines, permanentCircles
     }), [
         markers, lines, circles, areas, click, popup, clickedMarker,
-        areaFirstClick, areaTmpLines, replay, pauseReplay, permanentLines,permanentCircles
+        areaFirstClick, areaTmpLines, replay, pauseReplay, permanentLines, permanentCircles, bookmarkPosition
     ]);
 
     return (
