@@ -35,7 +35,7 @@ function App() {
     areas: true,
     Placemark: true,
   });
-  const [decayRate, setDecayRate] = useState(15000);
+  const [decayRate, setDecayRate] = useState(300000); // default to 5 mins in ms
   const [replay, setReplay] = useState(false);
   const [pauseReplay, setPauseReplay] = useState(false);
 

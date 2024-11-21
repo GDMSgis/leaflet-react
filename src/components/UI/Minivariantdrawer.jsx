@@ -91,6 +91,11 @@ export default function MiniDrawer() {
     replay, setReplay, bookmarks, setBookmarkPosition } = useContext(AppContext); // Use the context to get the function
 
   const { viewHome, setViewHome } = useContext(MarkerContext);
+  const decayOptions = [
+    { label: '5 min', value: 300000 },
+    { label: '10 min', value: 600000 },
+    { label: '15 min', value: 900000 },
+  ];
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', zIndex: 1000 }}> {/* Ensure full height */}
@@ -308,17 +313,21 @@ export default function MiniDrawer() {
           <ListItem disablePadding sx={{ display: 'block' }}>
             {open ? (
               <ListItemText>
-                <Box sx={{ textAlign: 'center', my: 2 }}>
-                  <Typography variant="body2" className="block font-bold mb-2">Set Decay Rate (ms):</Typography>
-                  <input
-                    type="number"
-                    value={decayRate}
-                    onChange={(e) => setDecayRate(parseInt(e.target.value, 10))}
-                    className="border rounded p-2"
-                    min="1000"
-                    style={{ fontSize: '0.75rem', width: '100px', margin: '0 auto' }} // Adjust font size and center input
-                  />
-                </Box>
+                  <Box sx={{ textAlign: 'center', my: 2 }}>
+                      <Typography variant="body2" className="block font-bold mb-2">
+                          Set Decay Rate:
+                      </Typography>
+                      {decayOptions.map(option => (
+                          <Button
+                              key={option.value}
+                              onClick={() => setDecayRate(option.value)}
+                              variant={decayRate === option.value ? 'contained' : 'outlined'}
+                              sx={{ mx: 0.1 }}
+                          >
+                              {option.label}
+                          </Button>
+                      ))}
+                  </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mx: 2 }}>
                   <Button
                     variant="contained"
