@@ -1,4 +1,4 @@
-import { List, ListItem, ListItemText, ListItemIcon, IconButton, Typography } from '@mui/material';
+import { List, ListItem, ListItemText, ListItemIcon, Typography } from '@mui/material';
 import { FaBookBookmark } from 'react-icons/fa6';
 import React, { useContext } from 'react';
 import { MarkerContext } from '../../context/MarkerContext';

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from 'react';
 import { useMap, useMapEvents } from "react-leaflet";
 import { debounce } from 'lodash';
-import { MarkerContext } from '../../context/MarkerContext'; // Make sure this path is correct
+import { MarkerContext } from '../../context/MarkerContext';
 import { calculateEndPoint, getBearing } from '../../utils/mapCalculations';
 import { AppContext } from '../../App';
 
@@ -9,7 +9,7 @@ function MapInteractions({ currentInteractionMode, setCursorPosition }) {
     const { handleInteractionModeChange } = useContext(AppContext);
     const { markers, addMarker, addLines, addCircle, addAreaLine, resetArea, handleClickEvent, bookmarkPosition, setBookmarkPosition, viewHome, setViewHome } = useContext(MarkerContext);
 
-    const handleMouseMove = debounce((e) => setCursorPosition(e.latlng), 100); // Adjust debounce time as needed
+    const handleMouseMove = debounce((e) => setCursorPosition(e.latlng), 50); // Adjust debounce time as needed
     const map = useMap();
 
     const CA_Bounds = [

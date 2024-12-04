@@ -7,14 +7,11 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ListItemButton from '@mui/material/ListItemButton';
 import Button from '@mui/material/Button';
-import { FaBroadcastTower, FaMapMarkerAlt } from 'react-icons/fa';
-import { RiShip2Line } from 'react-icons/ri';
-import { BsBroadcast } from 'react-icons/bs';
+import { FaMapMarkerAlt } from 'react-icons/fa';
 import { FaMapMarkedAlt, FaHome } from 'react-icons/fa';
 import { useContext } from 'react';
 import { AppContext } from '../../App';
 import { MarkerContext } from '../../context/MarkerContext';
-import { FaArrowsAlt } from 'react-icons/fa';
 import { RiFilterOffLine } from 'react-icons/ri';
 import BookmarkList from './BookmarkList';
 import { FaBookBookmark } from 'react-icons/fa6';
@@ -120,29 +117,6 @@ export default function MiniDrawer() {
           )}
         </DrawerHeader>
         <List>
-          {/* <ListItem disablePadding sx={{ display: 'block' }}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? 'initial' : 'center',
-                px: 2.5,
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : 'auto',
-                  justifyContent: 'center',
-                }}
-              >
-                <FaRedoAlt />
-              </ListItemIcon>
-              <ListItemText
-                primary="Replay"
-                sx={{ opacity: open ? 1 : 0 }}
-              />
-            </ListItemButton>
-          </ListItem> */}
           <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
@@ -191,53 +165,6 @@ export default function MiniDrawer() {
               />
             </ListItemButton>
           </ListItem>
-          {/* <ListItem disablePadding sx={{ display: 'block' }}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? 'initial' : 'center',
-                px: 2.5,
-              }}
-              onClick={() => handleInteractionModeChange('Boat')}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : 'auto',
-                  justifyContent: 'center',
-                }}
-              >
-                <RiShip2Line />
-              </ListItemIcon>
-              <ListItemText
-                primary="Ship"
-                sx={{ opacity: open ? 1 : 0 }}
-              />
-            </ListItemButton>
-          </ListItem> */}
-          {/* <ListItem disablePadding sx={{ display: 'block' }}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? 'initial' : 'center',
-                px: 2.5,
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : 'auto',
-                  justifyContent: 'center',
-                }}
-              >
-                <BsBroadcast />
-              </ListItemIcon>
-              <ListItemText
-                primary="Signal"
-                sx={{ opacity: open ? 1 : 0 }}
-              />
-            </ListItemButton>
-          </ListItem> */}
           <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
@@ -262,30 +189,6 @@ export default function MiniDrawer() {
               />
             </ListItemButton>
           </ListItem>
-          {/* <ListItem disablePadding sx={{ display: 'block' }}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? 'initial' : 'center',
-                px: 2.5,
-              }}
-              onClick={() => handleInteractionModeChange('dragging')} // Set interaction mode to "dragging"
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : 'auto',
-                  justifyContent: 'center',
-                }}
-              >
-                <FaArrowsAlt />
-              </ListItemIcon>
-              <ListItemText
-                primary="Dragging"
-                sx={{ opacity: open ? 1 : 0 }}
-              />
-            </ListItemButton>
-          </ListItem> */}
           <ListItem disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
@@ -313,21 +216,21 @@ export default function MiniDrawer() {
           <ListItem disablePadding sx={{ display: 'block' }}>
             {open ? (
               <ListItemText>
-                  <Box sx={{ textAlign: 'center', my: 2 }}>
-                      <Typography variant="body2" className="block font-bold mb-2">
-                          Set Decay Rate:
-                      </Typography>
-                      {decayOptions.map(option => (
-                          <Button
-                              key={option.value}
-                              onClick={() => setDecayRate(option.value)}
-                              variant={decayRate === option.value ? 'contained' : 'outlined'}
-                              sx={{ mx: 0.1 }}
-                          >
-                              {option.label}
-                          </Button>
-                      ))}
-                  </Box>
+                <Box sx={{ textAlign: 'center', my: 2 }}>
+                  <Typography variant="body2" className="block font-bold mb-2">
+                    Set Decay Rate:
+                  </Typography>
+                  {decayOptions.map(option => (
+                    <Button
+                      key={option.value}
+                      onClick={() => setDecayRate(option.value)}
+                      variant={decayRate === option.value ? 'contained' : 'outlined'}
+                      sx={{ mx: 0.1 }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mx: 2 }}>
                   <Button
                     variant="contained"

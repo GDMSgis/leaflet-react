@@ -3,7 +3,6 @@ import L from 'leaflet';
 import { calculateEndPoint, getBearing } from '../utils/mapCalculations';
 import { addSignalToDatabase, updateSignalInDatabase, deleteSignalInDatabase } from '../utils/apiCalls';
 import { debounce } from 'lodash';
-
 import { FaBroadcastTower, FaMapMarkerAlt } from 'react-icons/fa';
 import { BsBroadcast } from "react-icons/bs";
 import { RiShip2Line } from "react-icons/ri";
@@ -72,8 +71,8 @@ export function MarkerProvider({ children }) {
             ...newLines.filter(line => !prevLines.some(prevLine => prevLine.id === line.id))
                 .map(line => ({ ...line, callerData })) // Include `callerData` in each line
         ]);
-        handleLineIntersection();
     }, 300);
+
     function addCircle(center, radius, callerData = null) {
         setCircles(prevCircles => [
             ...prevCircles,
@@ -128,7 +127,6 @@ export function MarkerProvider({ children }) {
 
 
     // Throttled data fetching to reduce network load
-    // Modify data fetching useEffect for adding circles with callerData
     useEffect(() => {
         const fetchInterval = setInterval(async () => {
             try {
@@ -299,19 +297,6 @@ export function MarkerProvider({ children }) {
         setAreaTmpLines([]);
     };
 
-    const handleLineIntersection = () => {
-        lines.forEach((lineA, idxA) => {
-            lines.slice(idxA + 1).forEach((lineB) => {
-                const intersection = checkLineIntersection(lineA, lineB);
-                if (intersection) setCircles((prev) => [...prev, { center: intersection, radius: 200 }]);
-            });
-        });
-    };
-
-    const checkLineIntersection = (line1, line2) => {
-        // Placeholder for line intersection calculation logic
-        return null;
-    };
 
     // Function to get the icon based on the type
     function getIcon(type) {

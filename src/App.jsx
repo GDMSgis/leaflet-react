@@ -1,9 +1,8 @@
 import React, { useState, useContext, createContext, useEffect } from 'react';
 import MyMap from './components/Map/MyMap';
 import { MarkerProvider } from './context/MarkerContext.jsx';
-import Button from '@mui/material/Button';
 import { BsBroadcast } from "react-icons/bs";
-import { RiShip2Line, RiFilterFill, RiFilterOffLine } from "react-icons/ri";
+import { RiShip2Line } from "react-icons/ri";
 import { FaBroadcastTower } from "react-icons/fa";
 import Drawer from './components/UI/Minivariantdrawer';
 import BottomTab from './components/UI/BottomTab.jsx';
@@ -51,30 +50,30 @@ function App() {
   }
 
   return (
-      <AppContext.Provider value={{
-        handleInteractionModeChange,
-        toggleVisibility,
-        visibility,
-        decayRate,
-        setDecayRate,
-        replay,
-        setReplay,
-        pauseReplay,
-        setPauseReplay,
-      }}>
-        <MarkerProvider>
-          <div>
-            <MyMap
-                currentInteractionMode={currentInteractionMode}
-                visibility={visibility}
-                setCursorPosition={setCursorPosition}
-                decayRate={decayRate}
-            />
-            <Drawer />
-            <BottomTab lat={cursorPosition.lat} lng={cursorPosition.lng} />
-          </div>
-        </MarkerProvider>
-      </AppContext.Provider>
+    <AppContext.Provider value={{
+      handleInteractionModeChange,
+      toggleVisibility,
+      visibility,
+      decayRate,
+      setDecayRate,
+      replay,
+      setReplay,
+      pauseReplay,
+      setPauseReplay,
+    }}>
+      <MarkerProvider>
+        <div>
+          <MyMap
+            currentInteractionMode={currentInteractionMode}
+            visibility={visibility}
+            setCursorPosition={setCursorPosition}
+            decayRate={decayRate}
+          />
+          <Drawer />
+          <BottomTab lat={cursorPosition.lat} lng={cursorPosition.lng} />
+        </div>
+      </MarkerProvider>
+    </AppContext.Provider>
   );
 }
 

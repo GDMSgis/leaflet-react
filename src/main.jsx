@@ -5,6 +5,9 @@ import './index.css'
 import { MarkerProvider } from './context/MarkerContext.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
+
+  // Use strictmode for development, commented out to avoid RFF's getting initialized twice
+
   // <React.StrictMode>
   //   <MarkerProvider>
   //     <App />
