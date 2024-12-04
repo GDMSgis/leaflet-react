@@ -12,7 +12,7 @@ import MapInteractions from './MapInteractions';
 import CustomMarker from './CustomMarker';
 import 'leaflet/dist/leaflet.css';
 import Inspect from '../UI/Inspect';
-import MarkerContextMenu from '../../MarkerContextMenu';
+import MarkerContextMenu from '../UI/MarkerContextMenu';
 
 function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRate }) {
     const maptiles = ["World_Imagery", "World_Street_Map", "NatGeo_World_Map"];
