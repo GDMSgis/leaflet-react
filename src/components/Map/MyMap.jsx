@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef } from 'react';
 import {
     MapContainer,
     TileLayer,
@@ -10,10 +10,8 @@ import {
 import { MarkerContext } from '../../context/MarkerContext';
 import MapInteractions from './MapInteractions';
 import CustomMarker from './CustomMarker';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css'; // Important - add this back if missing
+import 'leaflet/dist/leaflet.css';
 import Inspect from '../UI/Inspect';
-import EditForm from '../UI/EditForm';
 import MarkerContextMenu from '../../MarkerContextMenu';
 
 function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRate }) {
@@ -43,7 +41,6 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
 
     const mapRef = useRef();
     const position = useMemo(() => [37.17952, -122.36], []); // Memoize initial position
-    // 2. Proper memo comparison for markers
     const renderedMarkers = useMemo(() => (
         markers.filter(marker => visibility[marker.type]).map((marker) => (
             <CustomMarker
@@ -53,7 +50,6 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         ))
     ), [markers, visibility]);
 
-    // 3. Add proper event handlers to lines
     // Render lines with event handlers for contextmenu
     const renderedLines = useMemo(() => (
         visibility.lines &&
@@ -85,7 +81,7 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
             <Circle
                 key={`circle-${circle.id || index}`}
                 center={circle.center}
-                radius={5556} // 3 nautical miles in meters
+                radius={5556} // nautical miles in meters
                 fillColor="blue"
                 fillOpacity={0.3}
                 eventHandlers={{
@@ -104,9 +100,6 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         ))
     ), [circles, visibility.circles, setClick, setClickedMarker, setPopup]);
 
-
-
-    // 5. Add back area rendering
     const renderedAreas = useMemo(() => (
         visibility.areas && areas.map((area, index) => (
             <Polygon
@@ -117,7 +110,6 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
         ))
     ), [areas, visibility.areas]);
 
-    // 6. Optimize decay effect
     useEffect(() => {
         if (decayRate > 0) {
             const intervalId = setInterval(() => {
@@ -206,12 +198,12 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
                 zoom={8}
                 ref={mapRef}
                 style={{ height: "100vh", width: "100vw" }}
-                preferCanvas={true} // 7. Add performance optimization
+                preferCanvas={true}
             >
                 <TileLayer
                     attribution="<a href='http://www.esri.com/'>Esri</a>"
                     url={`http://server.arcgisonline.com/ArcGIS/rest/services/${maptiles[mapnum]}/MapServer/tile/{z}/{y}/{x}`}
-                    keepBuffer={8} // 8. Improve tile handling
+                    keepBuffer={8}
                 />
                 <MapInteractions
                     currentInteractionMode={currentInteractionMode}
@@ -242,7 +234,6 @@ function MyMap({ currentInteractionMode, visibility, setCursorPosition, decayRat
 }
 
 export default React.memo(MyMap, (prevProps, nextProps) => {
-    // 9. Custom comparison for React.memo
     return (
         prevProps.currentInteractionMode === nextProps.currentInteractionMode &&
         prevProps.decayRate === nextProps.decayRate &&
